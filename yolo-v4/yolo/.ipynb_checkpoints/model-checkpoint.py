@@ -5,16 +5,6 @@ np.random.seed(SEED)
 ANCHORS = np.array(ANCHORS, np.float32)/416.0
 GRIDS = [TRAIN_INPUT_SIZE//stride for stride in YOLO_STRIDES]
 
-class BatchNormalization(BatchNormalization):
-        # "Frozen state" and "inference mode" are two separate concepts.
-        # `layer.trainable = False` is to freeze the layer, so the layer will use
-        # stored moving `var` and `mean` in the "inference mode", and both `gama`
-        # and `beta` will not be updated !
-        def call(self, x, training=False):
-            if not training:
-                training = tf.constant(False)
-            training = tf.logical_and(training, self.trainable)
-            return super().call(x, training)
 
 class YoloModel():
     def __init__(self,model=YOLO_MODEL,input_size=YOLO_INPUT_SIZE,training=False):
@@ -28,35 +18,6 @@ class YoloModel():
         
     def get_model(self):
         return self.yolo_model
-    
-    def convolutional(self,input_layer, filters_shape, downsample=False, activate=True, bn=True):
-        if downsample:
-            input_layer = ZeroPadding2D(((1, 0), (1, 0)))(input_layer)
-            padding = 'valid'
-            strides = 2
-        else:
-            strides = 1
-            padding = 'same'
-
-        conv = Conv2D(filters=filters_shape[-1], kernel_size = filters_shape[0], strides=strides,
-                      padding=padding, use_bias=not bn, kernel_regularizer=l2(0.0005),
-                      kernel_initializer=tf.random_normal_initializer(stddev=0.01),
-                      bias_initializer=tf.constant_initializer(0.),name='conv_'+str(self.layer_no))(input_layer)
-        if bn:
-            conv = BatchNormalization()(conv)
-        if activate == True:
-            conv = LeakyReLU(alpha=0.1)(conv)
-        self.layer_no +=1
-        return conv
-    
-    
-    def residual_block(self,input_layer, input_channel, filter_num1, filter_num2):
-        short_cut = input_layer
-        conv = self.convolutional(input_layer, filters_shape=(1, 1, input_channel, filter_num1))
-        conv = self.convolutional(conv       , filters_shape=(3, 3, filter_num1,   filter_num2))
-
-        residual_output = short_cut + conv
-        return residual_output
     
     def squeeze_excite_block(self,init, ratio=8):
         filters = init.shape[-1]
@@ -79,125 +40,6 @@ class YoloModel():
         return Conv2DTranspose(input_layer.shape[-1],(3,3),strides =(2,2),padding='same')(input_layer)
         #return tf.image.resize(input_layer, (input_layer.shape[1] * 2, input_layer.shape[2] * 2), method='nearest')
 
-    
-    def darknet53(self,input_data):
-        input_data = self.convolutional(input_data, (3, 3,  3,  32))
-        input_data = self.convolutional(input_data, (3, 3, 32,  64), downsample=True)
-
-        for i in range(1):
-            input_data = self.residual_block(input_data,  64,  32, 64)
-
-        input_data = self.convolutional(input_data, (3, 3,  64, 128), downsample=True)
-
-        for i in range(2):
-            input_data = self.residual_block(input_data, 128,  64, 128)
-
-        input_data = self.convolutional(input_data, (3, 3, 128, 256), downsample=True)
-
-        for i in range(8):
-            input_data = self.residual_block(input_data, 256, 128, 256)
-
-        route_1 = input_data
-        input_data = self.convolutional(input_data, (3, 3, 256, 512), downsample=True)
-
-        for i in range(8):
-            input_data = self.residual_block(input_data, 512, 256, 512)
-
-        route_2 = input_data
-        input_data = self.convolutional(input_data, (3, 3, 512, 1024), downsample=True)
-
-        for i in range(4):
-            input_data = self.residual_block(input_data, 1024, 512, 1024)
-
-        return route_1, route_2, input_data
-    
-    
-    def yolov3(self,input_layer, NUM_CLASS):
-        # After the input layer enters the Darknet-53 network, we get three branches
-        route_1, route_2, conv = self.darknet53(input_layer)
-        # See the orange module (DBL) in the figure above, a total of 5 Subconvolution operation
-        conv = self.convolutional(conv, (1, 1, 1024,  512))
-        conv = self.convolutional(conv, (3, 3,  512, 1024))
-        conv = self.convolutional(conv, (1, 1, 1024,  512))
-        conv = self.convolutional(conv, (3, 3,  512, 1024))
-        conv = self.convolutional(conv, (1, 1, 1024,  512))
-        conv_lobj_branch = self.convolutional(conv, (3, 3, 512, 1024))
-
-        # conv_lbbox is used to predict large-sized objects , Shape = [None, 13, 13, 255] 
-        conv_lbbox = self.convolutional(conv_lobj_branch, (1, 1, 1024, 3*(NUM_CLASS + 5)), activate=False, bn=False)
-
-        conv = self.convolutional(conv, (1, 1,  512,  256))
-        # upsample here uses the nearest neighbor interpolation method, which has the advantage that the
-        # upsampling process does not need to learn, thereby reducing the network parameter  
-        conv = self.upsample(conv)
-
-        conv = tf.concat([conv, route_2], axis=-1)
-        conv = self.convolutional(conv, (1, 1, 768, 256))
-        conv = self.convolutional(conv, (3, 3, 256, 512))
-        conv = self.convolutional(conv, (1, 1, 512, 256))
-        conv = self.convolutional(conv, (3, 3, 256, 512))
-        conv = self.convolutional(conv, (1, 1, 512, 256))
-        conv_mobj_branch = self.convolutional(conv, (3, 3, 256, 512))
-
-        # conv_mbbox is used to predict medium-sized objects, shape = [None, 26, 26, 255]
-        conv_mbbox = self.convolutional(conv_mobj_branch, (1, 1, 512, 3*(NUM_CLASS + 5)), activate=False, bn=False)
-
-        conv = self.convolutional(conv, (1, 1, 256, 128))
-        conv = self.upsample(conv)
-
-        conv = tf.concat([conv, route_1], axis=-1)
-        conv = self.convolutional(conv, (1, 1, 384, 128))
-        conv = self.convolutional(conv, (3, 3, 128, 256))
-        conv = self.convolutional(conv, (1, 1, 256, 128))
-        conv = self.convolutional(conv, (3, 3, 128, 256))
-        conv = self.convolutional(conv, (1, 1, 256, 128))
-        conv_sobj_branch = self.convolutional(conv, (3, 3, 128, 256))
-
-        # conv_sbbox is used to predict small size objects, shape = [None, 52, 52, 255]
-        conv_sbbox = self.convolutional(conv_sobj_branch, (1, 1, 256, 3*(NUM_CLASS +5)), activate=False, bn=False)
-
-        return [conv_sbbox, conv_mbbox, conv_lbbox]
-    
-    def yolo_micro(self,input_data):
-        input_data = self.convolutional(input_data, (3, 3, 3, self.N))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, self.N, 2*self.N))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 2*self.N, 4*self.N))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 4*self.N, 8*self.N))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 8*self.N, 16*self.N))
-        route_1 = input_data
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 16*self.N, 32*self.N))
-        input_data = MaxPool2D(2, 1, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 32*self.N, 64*self.N))
-
-        return route_1, input_data
-    
-    def yolov3_micro(self,input_layer, NUM_CLASS):
-        # After the input layer enters the Darknet-19 network, we get 2 branches
-        route_1, conv = self.yolo_micro(input_layer)
-
-        conv = self.convolutional(conv, (1, 1, 64*self.N, 16*self.N))
-        conv_lobj_branch = self.convolutional(conv, (3, 3, 16*self.N, 32*self.N))
-
-        # conv_lbbox is used to predict large-sized objects , Shape = [None, 26, 26, 255]
-        conv_lbbox = self.convolutional(conv_lobj_branch, (1, 1, 32*self.N, 3*(NUM_CLASS + 5)), activate=False, bn=False)
-
-        conv = self.convolutional(conv, (1, 1, 16*self.N, 8*self.N))
-        # upsample here uses the nearest neighbor interpolation method, which has the advantage that the
-        # upsampling process does not need to learn, thereby reducing the network parameter  
-        conv = self.upsample(conv)
-
-        conv = tf.concat([conv, route_1], axis=-1)
-        conv_mobj_branch = self.convolutional(conv, (3, 3, 8*self.N, 16*self.N))
-        # conv_mbbox is used to predict medium size objects, shape = [None, 13, 13, 255]
-        conv_mbbox = self.convolutional(conv_mobj_branch, (1, 1, 16*self.N, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
-
-        return [conv_mbbox, conv_lbbox]
-    
     def conv_ups_block(self,y1,y2,d,n=2,_act=True):
                 
         y1 = Conv2D(d,(1,1))(y1)
@@ -209,10 +51,6 @@ class YoloModel():
             y = LeakyReLU(alpha=0.1)(y)
         #y = UpSampling2D(size=(n,n))(y)
         return y
-    
-    def Ups2D(self,x):
-        x = Conv2DTranspose(self.seg_out_shape, 1,strides=(2,2), activation = 'relu', padding = 'same')(x)
-        return x
     
     def yolov3_lite(self,input_data):
         se_block = TRAIN_USE_SE_LAYERS
@@ -308,48 +146,6 @@ class YoloModel():
 
         return [conv_mbbox, conv_lbbox]+fpn 
     
-    
-    def yolov3_tiny_core(self,input_data):
-        input_data = self.convolutional(input_data, (3, 3, 3, 16))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 16, 32))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 32, 64))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 64, 128))
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 128, 256))
-        route_1 = input_data
-        input_data = MaxPool2D(2, 2, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 256, 512))
-        input_data = MaxPool2D(2, 1, 'same')(input_data)
-        input_data = self.convolutional(input_data, (3, 3, 512, 1024))
-
-        return route_1, input_data
-    
-    
-    def yolov3_tiny(self,input_layer, NUM_CLASS):
-        # After the input layer enters the Darknet-19 network, we get 2 branches
-        route_1, conv = self.yolov3_tiny_core(input_layer)
-
-        conv = self.convolutional(conv, (1, 1, 1024, 256))
-        conv_lobj_branch = self.convolutional(conv, (3, 3, 256, 512))
-
-        # conv_lbbox is used to predict large-sized objects , Shape = [None, 26, 26, 255]
-        conv_lbbox = self.convolutional(conv_lobj_branch, (1, 1, 512, 3*(NUM_CLASS + 5)), activate=False, bn=False)
-
-        conv = self.convolutional(conv, (1, 1, 256, 128))
-        # upsample here uses the nearest neighbor interpolation method, which has the advantage that the
-        # upsampling process does not need to learn, thereby reducing the network parameter  
-        conv = self.upsample(conv)
-
-        conv = tf.concat([conv, route_1], axis=-1)
-        conv_mobj_branch = self.convolutional(conv, (3, 3, 128, 256))
-        # conv_mbbox is used to predict medium size objects, shape = [None, 13, 13, 255]
-        conv_mbbox = self.convolutional(conv_mobj_branch, (1, 1, 256, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
-
-        return [conv_mbbox, conv_lbbox]
-    
     def mobilenet_v2(self):
         from .mobilenet_v2 import MobileNetV2
         if NO_OF_GRID == 2 : OBJ_SCALES = ['medium','large']
@@ -384,9 +180,6 @@ class YoloModel():
     def decode_output(self,conv_tensors,batch_size=TRAIN_MINI_BATCH_SIZE):
         output_tensors = []
         for i, conv_output in enumerate(conv_tensors[:NO_OF_GRID]):
-            # where i = 0, 1 or 2 to correspond to the three grid scales  
-            #conv_shape       = TRAIN_MINI_BATCH_SIZE,GRIDS[i]#tf.shape(conv_output)
-            #batch_size      = conv_shape[0]
             output_size      = GRIDS[i]
 
             conv_output = tf.reshape(conv_output, (batch_size, output_size, output_size, 3, 5 + NUM_CLASS))
@@ -396,7 +189,6 @@ class YoloModel():
             conv_raw_conf = conv_output[:, :, :, :, 4:5] # confidence of the prediction box
             conv_raw_prob = conv_output[:, :, :, :, 5: ] # category probability of the prediction box 
 
-            # next need Draw the grid. Where output_size is equal to 13, 26 or 52  
             y = tf.range(output_size, dtype=tf.int32)
             y = tf.expand_dims(y, -1)
             y = tf.tile(y, [1, output_size])
@@ -408,7 +200,6 @@ class YoloModel():
             xy_grid = tf.tile(xy_grid[tf.newaxis, :, :, tf.newaxis, :], [batch_size, 1, 1, 3, 1])
             xy_grid = tf.cast(xy_grid, tf.float32)
 
-            #https://github.com/ultralytics/yolov5/issues/471
             if LOSS_XYWH_IOU and LOSS_GRID_CORR :
                 pred_xy = 2*tf.sigmoid(conv_raw_dxdy) -0.5
                 pred_xy = (pred_xy + xy_grid) / tf.cast(output_size,tf.float32)
@@ -429,62 +220,6 @@ class YoloModel():
             output_tensors.append(decoded_output)
             
         return output_tensors
-    
-    def load_yolo_weights(self,model, weights_file):
-        tf.keras.backend.clear_session() # used to reset layer names
-        # load Darknet original weights to TensorFlow model
-        if YOLO_TYPE == "yolov3":
-            range1 = 75 if not TRAIN_YOLO_TINY else 13
-            range2 = [58, 66, 74] if not TRAIN_YOLO_TINY else [9, 12]
-        if YOLO_TYPE == "yolov4":
-            range1 = 110 if not TRAIN_YOLO_TINY else 21
-            range2 = [93, 101, 109] if not TRAIN_YOLO_TINY else [17, 20]
-
-        with open(weights_file, 'rb') as wf:
-            major, minor, revision, seen, _ = np.fromfile(wf, dtype=np.int32, count=5)
-
-            j = 0
-            for i in range(range1):
-                if i > 0:
-                    conv_layer_name = 'conv2d_%d' %i
-                else:
-                    conv_layer_name = 'conv2d'
-
-                if j > 0:
-                    bn_layer_name = 'batch_normalization_%d' %j
-                else:
-                    bn_layer_name = 'batch_normalization'
-                conv_layer_name = 'conv_%d' %i
-                
-                conv_layer = model.get_layer(conv_layer_name)
-                filters = conv_layer.filters
-                k_size = conv_layer.kernel_size[0]
-                in_dim = conv_layer.input_shape[-1]
-
-                if i not in range2:
-                    # darknet weights: [beta, gamma, mean, variance]
-                    bn_weights = np.fromfile(wf, dtype=np.float32, count=4 * filters)
-                    # tf weights: [gamma, beta, mean, variance]
-                    bn_weights = bn_weights.reshape((4, filters))[[1, 0, 2, 3]]
-                    bn_layer = model.get_layer(bn_layer_name)
-                    j += 1
-                else:
-                    conv_bias = np.fromfile(wf, dtype=np.float32, count=filters)
-
-                # darknet shape (out_dim, in_dim, height, width)
-                conv_shape = (filters, in_dim, k_size, k_size)
-                conv_weights = np.fromfile(wf, dtype=np.float32, count=np.product(conv_shape))
-                # tf shape (height, width, in_dim, out_dim)
-                conv_weights = conv_weights.reshape(conv_shape).transpose([2, 3, 1, 0])
-
-                if i not in range2:
-                    conv_layer.set_weights([conv_weights])
-                    bn_layer.set_weights(bn_weights)
-                else:
-                    conv_layer.set_weights([conv_weights, conv_bias])
-
-            assert len(wf.read()) == 0, 'failed to read all data'
-
 
 def bbox_iou(boxes1, boxes2):
     boxes1_area = boxes1[..., 2] * boxes1[..., 3]
@@ -526,23 +261,17 @@ def bbox_giou(boxes1, boxes2):
     inter_area = inter_section[..., 0] * inter_section[..., 1]
     union_area = boxes1_area + boxes2_area - inter_area
 
-    # Calculate the iou value between the two bounding boxes
     iou = inter_area / union_area
 
-    # Calculate the coordinates of the upper left corner and the lower right corner of the smallest closed convex surface
     enclose_left_up = tf.minimum(boxes1[..., :2], boxes2[..., :2])
     enclose_right_down = tf.maximum(boxes1[..., 2:], boxes2[..., 2:])
     enclose = tf.maximum(enclose_right_down - enclose_left_up, 0.0)
-
-    # Calculate the area of the smallest closed convex surface C
     enclose_area = enclose[..., 0] * enclose[..., 1]
 
-    # Calculate the GIoU value according to the GioU formula  
     giou = iou - 1.0 * (enclose_area - union_area) / enclose_area
 
     return giou
 
-# testing (should be better than giou)
 def bbox_iou_loss(boxes1, boxes2,eps=1e-7):
     iou = bbox_iou(boxes1, boxes2)
     if LOSS_IOU_TYPE == 'iou' : return iou
@@ -575,11 +304,7 @@ def bbox_iou_loss(boxes1, boxes2,eps=1e-7):
 
 #@tf.function
 def calc_yolo_loss(pred, conv, label, bboxes, i=0, batch_size = TRAIN_MINI_BATCH_SIZE):
-    #https://github.com/ultralytics/yolov5/issues/6998
-    #conv_shape  = tf.shape(conv)
-    #batch_size  = TRAIN_MINI_BATCH_SIZE#conv_shape[0]
     output_size = GRIDS[i]#conv_shape[1]
-    
     conv = tf.reshape(conv, (batch_size, output_size, output_size, 3, 5 + NUM_CLASS))
 
     conv_raw_conf = conv[:, :, :, :, 4:5]
@@ -656,7 +381,7 @@ def calc_yolo_loss(pred, conv, label, bboxes, i=0, batch_size = TRAIN_MINI_BATCH
     _loss_dict['iou_loss']  = bbox_loss
     _loss_dict['conf_loss'] = conf_loss 
     _loss_dict['prob_loss'] = prob_loss
-    _loss_dict['det_loss']  = MTL_LOSS_WTS[0] * bbox_loss + MTL_LOSS_WTS[1] * conf_loss + MTL_LOSS_WTS[2] * prob_loss
+    _loss_dict['det_loss']  = bbox_loss + conf_loss + prob_loss
     
     return _loss_dict, bbox_loss , conf_loss , prob_loss
 
@@ -722,76 +447,6 @@ def calc_yolo_loss_v3(pred, conv, label, bboxes, i=0):
     _loss_dict['det_loss']  = total_loss
     
     return _loss_dict, bbox_loss , conf_loss , prob_loss
-
-
-'''
-def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
-    Return yolo_loss tensor
-    Parameters
-    ----------
-    yolo_outputs: list of tensor, the output of yolo_body or tiny_yolo_body
-    y_true: list of array, the output of preprocess_true_boxes
-    anchors: array, shape=(N, 2), wh
-    num_classes: integer
-    ignore_thresh: float, the iou threshold whether to ignore object confidence loss
-    Returns
-    -------
-    loss: tensor, shape=(1,)
-    
-    num_layers = len(anchors)//3 # default setting
-    yolo_outputs = args[:num_layers]
-    y_true = args[num_layers:]
-    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
-    input_shape = K.cast(K.shape(yolo_outputs[0])[1:3] * 32, K.dtype(y_true[0]))
-    grid_shapes = [K.cast(K.shape(yolo_outputs[l])[1:3], K.dtype(y_true[0])) for l in range(num_layers)]
-    loss = 0
-    m = K.shape(yolo_outputs[0])[0] # batch size, tensor
-    mf = K.cast(m, K.dtype(yolo_outputs[0]))
-
-    for l in range(num_layers):
-        object_mask = y_true[l][..., 4:5]
-        true_class_probs = y_true[l][..., 5:]
-
-        grid, raw_pred, pred_xy, pred_wh = yolo_head(yolo_outputs[l],
-             anchors[anchor_mask[l]], num_classes, input_shape, calc_loss=True)
-        pred_box = K.concatenate([pred_xy, pred_wh])
-
-        # Darknet raw box to calculate loss.
-        raw_true_xy = y_true[l][..., :2]*grid_shapes[l][::-1] - grid
-        raw_true_wh = K.log(y_true[l][..., 2:4] / anchors[anchor_mask[l]] * input_shape[::-1])
-        raw_true_wh = K.switch(object_mask, raw_true_wh, K.zeros_like(raw_true_wh)) # avoid log(0)=-inf
-        box_loss_scale = 2 - y_true[l][...,2:3]*y_true[l][...,3:4]
-
-        # Find ignore mask, iterate over each of batch.
-        ignore_mask = tf.TensorArray(K.dtype(y_true[0]), size=1, dynamic_size=True)
-        object_mask_bool = K.cast(object_mask, 'bool')
-        def loop_body(b, ignore_mask):
-            true_box = tf.boolean_mask(y_true[l][b,...,0:4], object_mask_bool[b,...,0])
-            iou = box_iou(pred_box[b], true_box)
-            best_iou = K.max(iou, axis=-1)
-            ignore_mask = ignore_mask.write(b, K.cast(best_iou<ignore_thresh, K.dtype(true_box)))
-            return b+1, ignore_mask
-        _, ignore_mask = K.control_flow_ops.while_loop(lambda b,*args: b<m, loop_body, [0, ignore_mask])
-        ignore_mask = ignore_mask.stack()
-        ignore_mask = K.expand_dims(ignore_mask, -1)
-
-        # K.binary_crossentropy is helpful to avoid exp overflow.
-        xy_loss = object_mask * box_loss_scale * K.binary_crossentropy(raw_true_xy, raw_pred[...,0:2], from_logits=True)
-        wh_loss = object_mask * box_loss_scale * 0.5 * K.square(raw_true_wh-raw_pred[...,2:4])
-        confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[...,4:5], from_logits=True)+ \
-            (1-object_mask) * K.binary_crossentropy(object_mask, raw_pred[...,4:5], from_logits=True) * ignore_mask
-        class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[...,5:], from_logits=True)
-
-        xy_loss = K.sum(xy_loss) / mf
-        wh_loss = K.sum(wh_loss) / mf
-        confidence_loss = K.sum(confidence_loss) / mf
-        class_loss = K.sum(class_loss) / mf
-        loss += xy_loss + wh_loss + confidence_loss + class_loss
-        if print_loss:
-            loss = tf.Print(loss, [loss, xy_loss, wh_loss, confidence_loss, class_loss, K.sum(ignore_mask)], message='loss: ')
-    return loss
-'''
-
 
 #@tf.function
 def calc_seg_loss(_labels,_preds):

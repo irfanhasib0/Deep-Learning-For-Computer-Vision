@@ -18,7 +18,7 @@ YOLO_COCO_CLASSES           = "model_data/coco/coco.names"
 YOLO_STRIDES                = [8, 16, 32]
 YOLO_ANCHOR_PER_SCALE       = 3
 YOLO_MAX_BBOX_PER_SCALE     = 100
-YOLO_INPUT_SIZE             = 224
+YOLO_INPUT_SIZE             = 320
 if YOLO_TYPE                == "yolov4":
     ANCHORS                 = [[[12,  16], [19,   36], [40,   28]],
                                [[36,  75], [76,   55], [72,  146]],
@@ -77,18 +77,6 @@ LOSS_FILTER_BG_MASK         = True
 LOSS_BG_IOU_THRESH          = 0.5
 LOSS_WTS_BBOX               = [1.0,1.0,1.0] #[4.0,1.0,0.4]
 
-MTL_USE_METHOD              = 'default'
-#MTL_NO_OF_SHARED_LAYERS     = 12
-MTL_NO_OF_BLOCKS            = 1
-MTL_CALC_GRAD_VAR           = False
-MTL_USE_MUL_PROB            = False
-MTL_USE_IND_PROB            = False
-MTL_USE_SIG_PROB            = False
-MTL_USE_COMB_PROB           = False
-MTL_USE_ALPHA               = 0.9
-MTL_GRADS_QLEN              = 7
-MTL_LR_BIAS                 = 1.0
-MTL_LOSS_WTS                = [1.0,1.0,1.0]
 # TEST options
 TEST_ANNOT_PATH             = f"{DATA_DIR}COCO/annotations_trainval2017/annotations/instances_val2017.txt"
 TEST_DATA_SAVE_PATH         = f"{DATA_DIR}COCO/test/"
@@ -101,8 +89,6 @@ TEST_DECTECTED_IMAGE_PATH   = ""
 TEST_SCORE_THRESHOLD        = 0.3
 TEST_IOU_THRESHOLD          = 0.45
 
-
-#YOLOv3-TINY and YOLOv4-TINY WORKAROUND
 if NO_OF_GRID==2:
     YOLO_STRIDES            = [16, 32, 64]    
     ANCHORS                 = [[[10,  14], [23,   27], [37,   58]],
@@ -119,6 +105,28 @@ def __read_class_names(class_file_name):
 
 CLASS_NAMES=__read_class_names(YOLO_COCO_CLASSES)
 NUM_CLASS = len(CLASS_NAMES)
+params = locals()
+
+
+#------------------- Parameter Override -------------------------
+TRAIN_CHECKPOINTS_FOLDER    = 'logs/exp-MNET_V2_224_MUL_SIG_5110'
+DEBUG_MODE                  = False
+SEED                        = 0
+TRAIN_EPOCHS                = 25
+TRAIN_LR                    = 0.0001
+YOLO_MODEL                  = 'mobilenet'
+#YOLO_MODEL_MOBILENET_ALPHA  = 1.0
+DATA_GEN                    = True
+YOLO_INPUT_SIZE             = 224
+YOLO_MODEL_LOAD_WTS         = 'model_data/mobilenet_v2_1.0_224_mod.h5'
+TRAIN_INPUT_SIZE            = YOLO_INPUT_SIZE
+TEST_INPUT_SIZE             = YOLO_INPUT_SIZE
+TRAIN_BATCH_SIZE            = 64
+TRAIN_MINI_BATCH_SIZE       = 16
+TRAIN_FREEZE_EPOCH          = 1
+TRAIN_WARM_UP_EPOCHS        = 0
+#TRAIN_HRES_INPUT_SIZE      = 416
+TRAIN_LRES_PRE_WTS          =''# 'logs/exp-MNET_V2_224_V32_IND_QL7_0001_EXP_103'
 params = locals()
 
 
