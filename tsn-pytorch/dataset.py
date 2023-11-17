@@ -2,27 +2,49 @@ import torch.utils.data as data
 
 from PIL import Image
 import os
+import cv2
 import os.path
 import numpy as np
 from numpy.random import randint
+from torchvision import transforms as T
 
 class VideoRecord(object):
-    def __init__(self, row):
+    def __init__(self, row,root_path):
         self._data = row
-
+        self._root = root_path
+        #self.cap   = cv2.VideoCapture(self.path)
+    
+    def __del__(self):
+        self.cap.release()
+        
     @property
     def path(self):
-        return self._data[0]
+        return f"{self._root}/media/{self._data[1]}"
 
     @property
     def num_frames(self):
-        return int(self._data[1])
+        self.cap   = cv2.VideoCapture(self.path)
+        count      = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.cap.release()
+        return count
 
     @property
     def label(self):
         return int(self._data[2])
-
-
+    
+    def set_start_frame(self,start_frame_no):
+        self.cap   = cv2.VideoCapture(self.path)
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES,start_frame_no)
+        
+    def get_current_frame(self):
+        self.cap   = cv2.VideoCapture(self.path)
+        success,frame = self.cap.read()
+        self.cap.release()
+        if not success: 
+            print(self.path)
+            raise(BaseException)
+        return frame
+    
 class TSNDataSet(data.Dataset):
     def __init__(self, root_path, list_file,
                  num_segments=3, new_length=1, modality='RGB',
@@ -54,12 +76,12 @@ class TSNDataSet(data.Dataset):
             return [x_img, y_img]
 
     def _parse_list(self):
-        self.video_list = [VideoRecord(x.strip().split(' ')) for x in open(self.list_file)]
+        self.video_list = [x.strip().split(',') for x in open(self.list_file) if '.avi' in x]
 
     def _sample_indices(self, record):
         """
 
-        :param record: VideoRecord
+        :param record: VideoRecord   
         :return: list
         """
 
@@ -90,6 +112,7 @@ class TSNDataSet(data.Dataset):
 
     def __getitem__(self, index):
         record = self.video_list[index]
+        record = VideoRecord(record,self.root_path)
 
         if not self.test_mode:
             segment_indices = self._sample_indices(record) if self.random_shift else self._get_val_indices(record)
@@ -99,16 +122,16 @@ class TSNDataSet(data.Dataset):
         return self.get(record, segment_indices)
 
     def get(self, record, indices):
-
         images = list()
         for seg_ind in indices:
             p = int(seg_ind)
+            record.set_start_frame(p)
             for i in range(self.new_length):
-                seg_imgs = self._load_image(record.path, p)
-                images.extend(seg_imgs)
+                seg_imgs = T.ToPILImage()(record.get_current_frame())
+                images.append(seg_imgs)
                 if p < record.num_frames:
                     p += 1
-
+        #import pdb;pdb.set_trace()
         process_data = self.transform(images)
         return process_data, record.label
 

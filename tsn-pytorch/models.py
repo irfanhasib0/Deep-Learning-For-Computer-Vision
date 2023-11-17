@@ -204,7 +204,8 @@ TSN Configurations:
         if self.reshape:
             base_out = base_out.view((-1, self.num_segments) + base_out.size()[1:])
 
-        output = self.consensus(base_out)
+        #output = self.consensus(base_out)
+        output = base_out.mean(dim=1, keepdim=True)
         return output.squeeze(1)
 
     def _get_diff(self, input, keep_rgb=False):
