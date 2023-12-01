@@ -270,7 +270,7 @@ class Model(nn.Module):
         args = {**self.overrides, **custom, **kwargs, 'mode': 'val'}  # highest priority args on the right
 
         validator = (validator or self._smart_load('validator'))(args=args, _callbacks=self.callbacks)
-        validator(model=self.model)
+        validator(model=self.model,save_dir=kwargs['save_dir'])
         self.metrics = validator.metrics
         return validator.metrics
 
@@ -295,7 +295,7 @@ class Model(nn.Module):
             device=args['device'],
             verbose=kwargs.get('verbose'))
 
-    def export(self, **kwargs):
+    def export(self, save_dir='./', **kwargs):
         """
         Export model.
 
@@ -307,7 +307,7 @@ class Model(nn.Module):
 
         custom = {'imgsz': self.model.args['imgsz'], 'batch': 1, 'data': None, 'verbose': False}  # method defaults
         args = {**self.overrides, **custom, **kwargs, 'mode': 'export'}  # highest priority args on the right
-        return Exporter(overrides=args, _callbacks=self.callbacks)(model=self.model)
+        return Exporter(overrides=args, save_dir = save_dir,  _callbacks=self.callbacks)(model=self.model)
 
     def train(self, trainer=None, **kwargs):
         """
@@ -335,7 +335,7 @@ class Model(nn.Module):
             self.trainer.model = self.trainer.get_model(weights=self.model if self.ckpt else None, cfg=self.model.yaml)
             self.model = self.trainer.model
         self.trainer.hub_session = self.session  # attach optional HUB session
-        self.trainer.train()
+        self.trainer.train(save_dir=kwargs['save_dir'])
         # Update model and cfg after training
         if RANK in (-1, 0):
             ckpt = self.trainer.best if self.trainer.best.exists() else self.trainer.last

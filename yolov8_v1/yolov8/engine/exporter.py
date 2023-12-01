@@ -133,7 +133,7 @@ class Exporter:
         callbacks (list, optional): List of callback functions. Defaults to None.
     """
 
-    def __init__(self, cfg=DEFAULT_CFG, overrides=None, _callbacks=None):
+    def __init__(self, cfg=DEFAULT_CFG, overrides=None, save_dir='./', _callbacks=None):
         """
         Initializes the Exporter class.
 
@@ -142,7 +142,8 @@ class Exporter:
             overrides (dict, optional): Configuration overrides. Defaults to None.
             _callbacks (dict, optional): Dictionary of callback functions. Defaults to None.
         """
-        self.args = get_cfg(cfg, overrides)
+        self.args     = get_cfg(cfg, overrides)
+        self.save_dir = save_dir
         if self.args.format.lower() in ('coreml', 'mlmodel'):  # fix attempt for protobuf<3.20.x errors
             os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'  # must run before TensorBoard callback
 
@@ -186,10 +187,10 @@ class Exporter:
 
         # Input
         im = torch.zeros(self.args.batch, 3, *self.imgsz).to(self.device)
-        file = Path(
-            getattr(model, 'pt_path', None) or getattr(model, 'yaml_file', None) or model.yaml.get('yaml_file', ''))
-        if file.suffix in {'.yaml', '.yml'}:
-            file = Path(file.name)
+        #file = Path(
+        #    getattr(model, 'pt_path', None) or getattr(model, 'yaml_file', None) or model.yaml.get('yaml_file', ''))
+        #if file.suffix in {'.yaml', '.yml'}:
+        #    file = Path(file.name)
 
         # Update model
         model = deepcopy(model).to(self.device)
@@ -221,7 +222,7 @@ class Exporter:
         # Assign
         self.im = im
         self.model = model
-        self.file = file
+        self.file = Path(self.save_dir)
         self.output_shape = tuple(y.shape) if isinstance(y, torch.Tensor) else tuple(
             tuple(x.shape if isinstance(x, torch.Tensor) else []) for x in y)
         self.pretty_name = Path(self.model.yaml.get('yaml_file', self.file)).stem.replace('yolo', 'YOLO')
@@ -241,8 +242,8 @@ class Exporter:
         if model.task == 'pose':
             self.metadata['kpt_shape'] = model.model[-1].kpt_shape
 
-        LOGGER.info(f"\n{colorstr('PyTorch:')} starting from '{file}' with input shape {tuple(im.shape)} BCHW and "
-                    f'output shape(s) {self.output_shape} ({file_size(file):.1f} MB)')
+        LOGGER.info(f"\n{colorstr('PyTorch:')} starting from '{self.file}' with input shape {tuple(im.shape)} BCHW and "
+                    f'output shape(s) {self.output_shape} ({file_size(self.file):.1f} MB)')
 
         # Exports
         f = [''] * len(fmts)  # exported filenames
@@ -283,7 +284,7 @@ class Exporter:
             predict_data = f'data={data}' if model.task == 'segment' and fmt == 'pb' else ''
             q = 'int8' if self.args.int8 else 'half' if self.args.half else ''  # quantization
             LOGGER.info(f'\nExport complete ({time.time() - t:.1f}s)'
-                        f"\nResults saved to {colorstr('bold', file.parent.resolve())}"
+                        f"\nResults saved to {colorstr('bold', self.file.parent.resolve())}"
                         f'\nPredict:         yolo predict task={model.task} model={f} imgsz={imgsz} {q} {predict_data}'
                         f'\nValidate:        yolo val task={model.task} model={f} imgsz={imgsz} data={data} {q} {s}'
                         f'\nVisualize:       https://netron.app')

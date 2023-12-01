@@ -101,10 +101,12 @@ class BaseValidator:
         self.callbacks = _callbacks or callbacks.get_default_callbacks()
 
     @smart_inference_mode()
-    def __call__(self, trainer=None, model=None):
+    def __call__(self, trainer=None, model=None, save_dir = None):
         """Supports validation of a pre-trained model if passed or a model being trained if trainer is passed (trainer
         gets priority).
         """
+        if save_dir:
+            self.save_dir=Path(save_dir)
         self.training = trainer is not None
         augment = self.args.augment and (not self.training)
         if self.training:

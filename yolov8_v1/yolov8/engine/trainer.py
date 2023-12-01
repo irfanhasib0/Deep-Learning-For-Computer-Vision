@@ -87,16 +87,8 @@ class BaseTrainer:
         init_seeds(self.args.seed + 1 + RANK, deterministic=self.args.deterministic)
 
         # Dirs
-        self.save_dir = get_save_dir(self.args)
-        self.args.name = self.save_dir.name  # update name for loggers
-        self.wdir = self.save_dir / 'weights'  # weights dir
-        if RANK in (-1, 0):
-            self.wdir.mkdir(parents=True, exist_ok=True)  # make dir
-            self.args.save_dir = str(self.save_dir)
-            yaml_save(self.save_dir / 'args.yaml', vars(self.args))  # save run args
-        self.last, self.best = self.wdir / 'last.pt', self.wdir / 'best.pt'  # checkpoint paths
+        self.set_dirs(get_save_dir(self.args))
         self.save_period = self.args.save_period
-
         self.batch_size = self.args.batch
         self.epochs = self.args.epochs
         self.start_epoch = 0
@@ -133,14 +125,24 @@ class BaseTrainer:
         self.loss = None
         self.tloss = None
         self.loss_names = ['Loss']
-        self.csv = self.save_dir / 'results.csv'
         self.plot_idx = [0, 1, 2]
 
         # Callbacks
         self.callbacks = _callbacks or callbacks.get_default_callbacks()
         if RANK in (-1, 0):
             callbacks.add_integration_callbacks(self)
-
+            
+    def set_dirs(self,save_dir):
+        self.save_dir = save_dir
+        self.args.name = self.save_dir.name # update name for loggers
+        self.wdir = self.save_dir / 'weights'  # weights dir
+        if RANK in (-1, 0):
+            self.wdir.mkdir(parents=True, exist_ok=True)  # make dir
+            self.args.save_dir = str(self.save_dir)
+            yaml_save(self.save_dir / 'args.yaml', vars(self.args))  # save run args
+        self.csv = self.save_dir / 'results.csv'
+        self.last, self.best = self.wdir / 'last.pt', self.wdir / 'best.pt'  # checkpoint paths
+        
     def add_callback(self, event: str, callback):
         """Appends the given callback."""
         self.callbacks[event].append(callback)
@@ -154,7 +156,9 @@ class BaseTrainer:
         for callback in self.callbacks.get(event, []):
             callback(self)
 
-    def train(self):
+    def train(self,save_dir=None):
+        if save_dir:
+            self.set_dirs(Path(save_dir))
         """Allow device='', device=None on Multi-GPU systems to default to device=0."""
         if isinstance(self.args.device, str) and len(self.args.device):  # i.e. device='0' or device='0,1,2,3'
             world_size = len(self.args.device.split(','))

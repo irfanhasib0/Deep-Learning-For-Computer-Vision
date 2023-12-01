@@ -133,7 +133,8 @@ class SimpleClass:
         """Return a human-readable string representation of the object."""
         attr = []
         for a in dir(self):
-            v = getattr(self, a)
+            try : v = getattr(self, a)
+            except: continue
             if not callable(v) and not a.startswith('_'):
                 if isinstance(v, SimpleClass):
                     # Display only the module and class name for subclasses
@@ -842,12 +843,11 @@ class SettingsManager(dict):
         git_dir = get_git_dir()
         root = git_dir or Path()
         datasets_root = (root.parent if git_dir and is_dir_writeable(root.parent) else root).resolve()
-
         self.file = Path(file)
         self.version = version
         self.defaults = {
             'settings_version': version,
-            'datasets_dir': str(datasets_root / 'datasets'),
+            'datasets_dir': '',#str(datasets_root / 'datasets'),
             'weights_dir': str(root / 'weights'),
             'runs_dir': str(root / 'runs'),
             'uuid': hashlib.sha256(str(uuid.getnode()).encode()).hexdigest(),
