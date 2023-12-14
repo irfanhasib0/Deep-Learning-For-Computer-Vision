@@ -70,7 +70,7 @@ retina_masks: False  # (bool) use high-resolution segmentation masks
 boxes: True  # (bool) Show boxes in segmentation predictions
 
 # Export settings ------------------------------------------------------------------------------------------------------
-format: torchscript  # (str) format to export to, choices at https://docs.yolov8.com/modes/export/#export-formats
+format: #torchscript  # (str) format to export to, choices at https://docs.yolov8.com/modes/export/#export-formats
 keras: False  # (bool) use Kera=s
 optimize: False  # (bool) TorchScript: optimize for mobile
 int8: False  # (bool) CoreML/TF INT8 quantization
