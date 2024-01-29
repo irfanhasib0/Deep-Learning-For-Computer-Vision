@@ -1,13 +1,16 @@
+import random
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-from torch import nn
-from abc import abstractmethod
-
-from typing import List, Callable, Union, Any, TypeVar, Tuple
-# from torch import tensor as Tensor
 from copy import copy
+from abc import abstractmethod
+from typing import List, Callable, Union, Any, TypeVar, Tuple
+
+from nf_models.stgcn import st_gcn
+from nf_models.graph import Graph
+
 
 Tensor = TypeVar('torch.tensor')
 
@@ -60,22 +63,45 @@ def ae_loss(recons,inps) -> dict:
         return {'loss': recons_loss, 'Reconstruction_Loss':recons_loss.detach()}
     
 class VAE(BaseVAE):
-
-
     def __init__(self,
+                 args,
                  in_channels: int,
                  latent_dim: int,
-                 hidden_dims: List = None,
-                 **kwargs) -> None:
+                 hidden_dims: List = None) -> None:
         super(VAE, self).__init__()
-
+        self.set_seed(args['seed'])
+        self.V = args['no_of_kps']
+        self.T = args['seg_len']
         self.latent_dim = latent_dim
-
-        modules = []
+        self.A = Graph(strategy='uniform', max_hop=8).A
+        self.A = torch.tensor(self.A,dtype=torch.float32).to(args['device'])
+        self.A = self.A.repeat([3,1,1])
         if hidden_dims is None:
             hidden_dims = [32, 64, 128, 256]
+        
         self.hidden_dims = copy(hidden_dims)
-        # Build Encoder
+        self.encoder     = self.build_encoder(in_channels,hidden_dims)
+        
+        self.fc_mu   = nn.Linear(hidden_dims[-1]*self.V*self.T, latent_dim)
+        self.fc_var  = nn.Linear(hidden_dims[-1]*self.V*self.T, latent_dim)
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1]* self.V*self.T)
+        self.decoder = self.build_decoder(latent_dim,hidden_dims)
+
+        self.final_layer = nn.Sequential(
+                            nn.ConvTranspose2d(hidden_dims[-1],
+                                               hidden_dims[-1],
+                                               kernel_size=3,
+                                               stride=1,
+                                               padding=1),
+                            nn.BatchNorm2d(hidden_dims[-1]),
+                            nn.LeakyReLU(),
+                            nn.Conv2d(hidden_dims[-1], out_channels= in_channels,
+                                      kernel_size= 3, padding= 1),
+                            nn.Tanh())
+        
+    '''
+    def build_encoder(self,in_channels,hidden_dims):
+        modules = []
         in_ch = in_channels
         for h_dim in hidden_dims:
             modules.append(
@@ -86,17 +112,12 @@ class VAE(BaseVAE):
                     nn.LeakyReLU())
             )
             in_ch = h_dim
-
-        self.encoder = nn.Sequential(*modules)
-        self.fc_mu   = nn.Linear(hidden_dims[-1]*24*18, latent_dim)
-        self.fc_var  = nn.Linear(hidden_dims[-1]*24*18, latent_dim)
-
-
-        # Build Decoder
+        
+        return nn.Sequential(*modules)
+    
+    def build_decoder(self,latent_dim,hidden_dims):
         modules = []
-
         self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1]* 24*18)
-
         hidden_dims.reverse()
         #output_padding=1),
         for i in range(len(hidden_dims) - 1):
@@ -111,32 +132,51 @@ class VAE(BaseVAE):
                     nn.LeakyReLU())
             )
 
+        return nn.Sequential(*modules)
+    '''
+    def set_seed(self,seed):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        #torch.use_detecministic_algorithms(seed)
+    
+    def build_encoder(self,in_channels,hidden_dims):
+        modules = []
+        in_ch = in_channels
+        for i,h_dim in enumerate(hidden_dims):
+            modules.append(
+                st_gcn(in_ch,h_dim,(9,3),residual=not (i==0))
+            )
+            in_ch = h_dim
+            
+        return nn.ModuleList(modules)
+    
+    def build_decoder(self,latent_dim,hidden_dims):
+        modules = []
+        hidden_dims.reverse()
+        #output_padding=1),
+        residual = False
+        for i in range(len(hidden_dims) - 1):
+            modules.append(
+                st_gcn(hidden_dims[i],hidden_dims[i+1],(9,3),residual= not (i==0))
+            )
 
-
-        self.decoder = nn.Sequential(*modules)
-
-        self.final_layer = nn.Sequential(
-                            nn.ConvTranspose2d(hidden_dims[-1],
-                                               hidden_dims[-1],
-                                               kernel_size=3,
-                                               stride=1,
-                                               padding=1),
-                            nn.BatchNorm2d(hidden_dims[-1]),
-                            nn.LeakyReLU(),
-                            nn.Conv2d(hidden_dims[-1], out_channels= in_channels,
-                                      kernel_size= 3, padding= 1),
-                            nn.Tanh())
-
-    def encode(self, input: Tensor) -> List[Tensor]:
+        return nn.ModuleList(modules)
+    
+        
+    def encode(self, inp: Tensor) -> List[Tensor]:
         """
         Encodes the input by passing through the encoder network
         and returns the latent codes.
         :param input: (Tensor) Input tensor to encoder [N x C x H x W]
         :return: (Tensor) List of latent codes
         """
-        result = self.encoder(input)
+        result = inp
+        for enc in self.encoder:
+            result,_ = enc(result,self.A)
+        #result = self.encoder(inp)
         result = torch.flatten(result, start_dim=1)
-
         # Split the result into mu and var components
         # of the latent Gaussian distributions
         mu = self.fc_mu(result)
@@ -152,8 +192,10 @@ class VAE(BaseVAE):
         :return: (Tensor) [B x C x H x W]
         """
         result = self.decoder_input(z)
-        result = result.view(-1, self.hidden_dims[-1], 24, 18)
-        result = self.decoder(result)
+        result = result.view(-1, self.hidden_dims[-1], self.T, self.V)
+        for dec in self.decoder:
+            result,_ = dec(result,self.A)
+        #result = self.decoder(result)
         result = self.final_layer(result)
         return result
 

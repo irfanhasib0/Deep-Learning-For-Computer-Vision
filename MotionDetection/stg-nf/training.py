@@ -35,14 +35,20 @@ def compute_loss(nll, reduction="mean", mean=0):
 
 
 class Trainer:
-    def __init__(self, model, train_loader, test_loader,loss_func=None,
-                 optimizer_f=None, scheduler_f=None):
+    def __init__(self, model,
+                 train_loader,
+                 test_loader,
+                 loss_func=None,
+                 epochs=5,
+                 lr=0.0001,
+                 optimizer_f=None,
+                 scheduler_f=None):
         self.model         = model
-        self.lr            = 0.001
+        self.lr            = lr
         self.optimizer     = 'adam'
         self.weight_decay  = 5e-5
         self.ckpt_dir = ''
-        self.epochs        = 20
+        self.epochs        = epochs
         self.device        = 'cuda:0'
         self.model_confidence = False
         self.model_lr         = 5e-4
@@ -85,7 +91,7 @@ class Trainer:
         if filename is None:
             filename = 'checkpoint.pth.tar'
 
-        state['args'] = self
+        #state['args'] = self
 
         path_join = os.path.join(self.ckpt_dir, filename)
         torch.save(state, path_join)
@@ -128,19 +134,20 @@ class Trainer:
                 #    samp = data[0]
                 #else:
                 samp = data[:, :2]
-                z= self.model(samp.float())
+                z    = self.model(samp)
                 #if nll is None:
                 #    continue
                 #if self.model_confidence:
                 #    nll = nll * score
-                losses = self.loss_func(z)
+                losses = self.loss_func(*z)
                 losses['loss'].backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-                pbar.set_description("Loss: {}".format(losses.item()))
-                log_writer.add_scalar('NLL Loss', losses.item(), epoch * len(self.train_loader) + itern)
-
+                pbar.set_description("Loss: {}".format(losses['loss']))
+                #log_writer.add_scalar('NLL Loss', losses['loss'], epoch * len(self.train_loader) + itern)
+            print(losses)
+            torch.cuda.empty_cache()
             self.save_checkpoint(epoch, filename=checkpoint_filename)
             new_lr = self.adjust_lr(epoch)
             print('Checkpoint Saved. New LR: {0:.3e}'.format(new_lr))
@@ -152,17 +159,12 @@ class Trainer:
         probs = torch.empty(0).to(self.device)
         print("Starting Test Eval")
         for itern, data_arr in enumerate(pbar):
-            data = [data.to(self.device, non_blocking=True) for data in data_arr]
-            score = data[-2].amin(dim=-1)
-            if self.model_confidence:
-                samp = data[0]
-            else:
-                samp = data[0][:, :2]
+            data  = data.permute((0,3,1,2))
+            data  = data_arr[0].to(self.device, non_blocking=True)
             with torch.no_grad():
-                z, nll = self.model(samp.float(), label=torch.ones(data[0].shape[0]), score=score)
-            if self.model_confidence:
-                nll = nll * score
-            probs = torch.cat((probs, -1 * nll), dim=0)
+                pred,inp = self.model(data)
+                scores   = torch.abs(pred - inp).mean(dim=[1,2,3])
+            probs   = torch.cat((probs, scores), dim=0)
         prob_mat_np = probs.cpu().detach().numpy().squeeze().copy(order='C')
         return prob_mat_np
 

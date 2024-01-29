@@ -20,10 +20,12 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 class Score():
-    def __init__(self,dataset='ShanghaiTech-HR'):
+    def __init__(self,dataset='ShanghaiTech-HR',path='/home/irfan/Desktop/Data/Pose_JSON_Data/ShanghaiTech/gt/test_frame_mask/'):
         self.dataset = dataset
-        self.seg_len = 24
+        self.seg_stride  = 2
+        self.seg_len     = 24
         self.SHANGHAITECH_HR_SKIP = [(1, 130), (1, 135), (1, 136), (6, 144), (6, 145), (12, 152)]
+        self.per_frame_scores_root = path
         
     def score_dataset(self,score, metadata):
         gt_arr, scores_arr = self.get_dataset_scores(score, metadata)
@@ -37,7 +39,6 @@ class Score():
     def get_dataset_scores(self,scores, metadata):
         dataset_gt_arr = []
         dataset_scores_arr = []
-        metadata_np = np.array(metadata)
 
         if self.dataset == 'UBnormal':
             pose_segs_root = 'data/UBnormal/pose/test'
@@ -46,13 +47,12 @@ class Score():
                 fn.replace("alphapose_tracked_person.json", "tracks.txt") for fn in clip_list if fn.endswith('.json'))
             per_frame_scores_root = 'data/UBnormal/gt/'
         else:
-            self.per_frame_scores_root = '/home/irfan/Desktop/Data/Pose_JSON_Data/ShanghaiTech/gt/test_frame_mask/'
             clip_list = os.listdir(self.per_frame_scores_root)
             clip_list = sorted(fn for fn in clip_list if fn.endswith('.npy'))
 
         print("Scoring {} clips".format(len(clip_list)))
         for clip in tqdm(clip_list):
-            clip_gt, clip_score = self.get_clip_score(scores, clip, metadata_np, metadata, per_frame_scores_root)
+            clip_gt, clip_score = self.get_clip_score(scores, clip, metadata)
             if clip_score is not None:
                 dataset_gt_arr.append(clip_gt)
                 dataset_scores_arr.append(clip_score)
@@ -83,41 +83,53 @@ class Score():
         return scores_arr
 
 
-    def get_clip_score(self,scores, clip, metadata_np, metadata, per_frame_scores_root):
+    def get_clip_score(self,scores, mean, kmn, clip, metadata):
         if self.dataset == 'UBnormal':
             type, scene_id, clip_id = re.findall('(abnormal|normal)_scene_(\d+)_scenario(.*)_tracks.*', clip)[0]
             clip_id = type + "_" + clip_id
         else:
             scene_id, clip_id = [int(i) for i in clip.replace("label", "001").split('.')[0].split('_')]
-            if shanghaitech_hr_skip((self.dataset == 'ShanghaiTech-HR'), scene_id, clip_id):
-                return None, None
-        clip_metadata_inds = np.where((metadata_np[:, 1] == clip_id) &
-                                      (metadata_np[:, 0] == scene_id))[0]
+            if self.shanghaitech_hr_skip((self.dataset == 'ShanghaiTech-HR'), scene_id, clip_id):
+                return None, None, None
+        
+        clip_metadata_inds = np.where((metadata[:, 1] == clip_id) &
+                                      (metadata[:, 0] == scene_id))[0]
         clip_metadata = metadata[clip_metadata_inds]
         clip_fig_idxs = set([arr[2] for arr in clip_metadata])
-        clip_res_fn = os.path.join(per_frame_scores_root, clip)
+        clip_res_fn = os.path.join(self.per_frame_scores_root, clip)
         clip_gt = np.load(clip_res_fn)
-        if self.dataset != "UBnormal":
-            clip_gt = np.ones(clip_gt.shape) - clip_gt  # 1 is normal, 0 is abnormal
-        scores_zeros = np.ones(clip_gt.shape[0]) * np.inf
+        
+        #if self.dataset != "UBnormal":
+        #    clip_gt = np.ones(clip_gt.shape) - clip_gt  # 1 is normal, 0 is abnormal
+        
+        min_scores = -np.inf * np.ones(clip_gt.shape[0])
         if len(clip_fig_idxs) == 0:
-            clip_person_scores_dict = {0: np.copy(scores_zeros)}
+            scores_dict = {0: np.copy(min_scores)}
+            mean_dict   = {0: np.copy(min_scores)}
         else:
-            clip_person_scores_dict = {i: np.copy(scores_zeros) for i in clip_fig_idxs}
+            scores_dict = {i: np.copy(min_scores) for i in clip_fig_idxs}
+            mean_dict   = {i: np.copy(min_scores) for i in clip_fig_idxs}
 
         for person_id in clip_fig_idxs:
             person_metadata_inds = \
                 np.where(
-                    (metadata_np[:, 1] == clip_id) & (metadata_np[:, 0] == scene_id) & (metadata_np[:, 2] == person_id))[0]
+                    (metadata[:, 1] == clip_id) & (metadata[:, 0] == scene_id) & (metadata[:, 2] == person_id))[0]
             pid_scores = scores[person_metadata_inds]
-
+            mu         = mean[person_metadata_inds]
+            dists      = ((kmn.cluster_centers_[kmn.predict(mu)] - mu)**2).mean(axis=1)
+            
             pid_frame_inds = np.array([metadata[i][3] for i in person_metadata_inds]).astype(int)
-            clip_person_scores_dict[person_id][pid_frame_inds + int(self.seg_len / 2)] = pid_scores
-
-        clip_ppl_score_arr = np.stack(list(clip_person_scores_dict.values()))
-        clip_score = np.amin(clip_ppl_score_arr, axis=0)
-
-        return clip_gt, clip_score
+            scores_dict[person_id][pid_frame_inds + int((self.seg_stride*self.seg_len) / 2)] = pid_scores
+            mean_dict[person_id][pid_frame_inds + int((self.seg_stride*self.seg_len) / 2)]   = dists
+            
+        score_arr = np.stack(list(scores_dict.values()))
+        mean_arr  = np.stack(list(mean_dict.values()))
+        
+        clip_score = np.amax(score_arr, axis=0) #amin
+        clip_dist  = np.amax(mean_arr, axis=0) #amin
+        clip_score[clip_score == -np.inf] = min(0,clip_score[clip_score != -np.inf].min())
+        clip_dist[clip_dist == -np.inf]   = min(0,clip_dist[clip_dist != -np.inf].min())
+        return clip_gt, clip_score, clip_dist
     
     def shanghaitech_hr_skip(self,shanghaitech_hr, scene_id, clip_id):
         if not shanghaitech_hr:

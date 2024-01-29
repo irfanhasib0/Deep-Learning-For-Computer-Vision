@@ -1,24 +1,36 @@
 import os
 import json
+import glob
 import cv2
 from tqdm import tqdm
 import numpy as np
 from matplotlib import pyplot as plt
 from torch.utils.data import Dataset
 
+def normalize_pose(pose_data, args):
+   
+    norm_factor    = np.array(args['vid_res'])
+    pose_data = pose_data / norm_factor
+    
+    #pose_data[..., :2] = 2 * pose_data[..., :2] - 1
+    pose_data[..., :2] = (pose_data[..., :2] - pose_data[..., :2].mean(axis=(0, 1))[None, None, :]) / pose_data[..., 1].std(axis=(0, 1))[None, None, None]
+    
+    return pose_data
+
+
 class GeneratePoseData():
-    def __init__(self,person_json_root,no_of_files=400):
-        self.no_of_files = no_of_files
+    def __init__(self,args,split='valid'):
+        self.no_of_files = args['no_of_files']
         self.start_ofst  = 0
-        self.seg_stride  = 2
-        self.seg_len     = 24
+        self.seg_stride  = args['seg_stride']
+        self.seg_len     = args['seg_len']
         self.headless    = False
-        self.seg_conf_th = 0.0
+        self.seg_conf_thr= args['seg_conf_thr']
         self.dataset          = "ShanghaiTech-HR"
-        self.person_json_root = person_json_root
+        self.person_json_root = args['json_dir'][split]
         self.SHANGHAITECH_HR_SKIP  = [(1, 130), (1, 135), (1, 136), (6, 144), (6, 145), (12, 152)]
         
-        self.dtype_pose       = np.uint16
+        self.dtype_pose       = np.float16
         self.dtype_pose_score = np.float16
         self.dtype_prop_score = np.float16
         self.dtype_meta_data  = np.uint16
@@ -80,7 +92,7 @@ class GeneratePoseData():
 
         #if seg_conf_th > 0.0:
         #    segs_data_np, segs_meta, segs_score_np = \
-        #        self.seg_conf_th_filter(segs_data_np, segs_meta, segs_score_np, seg_conf_th)
+        #        self.seg_conf_th_filter(segs_data_np, segs_meta, segs_score_np, self.seg_conf_th)
 
         return self.poses, self.pose_scores, self.prop_scores, self.meta_data
 
@@ -164,12 +176,14 @@ class GeneratePoseData():
             start_ind = self.start_ofst + seg_ind * self.seg_stride
             start_key = single_frame_ids_sorted[start_ind]
             
-            if self.is_seg_continuous(single_frame_ids_sorted, start_key, self.seg_stride):
+            if self.is_seg_continuous(single_frame_ids_sorted, start_key, self.seg_len):
                 meta_data        = np.array([int(scene_id), int(clip_id), int(sp_meta[0]), int(start_key)],dtype=self.dtype_meta_data)
-                self.poses.append(sp_poses[start_ind:start_ind + self.seg_len][None])
-                self.pose_scores.append(sp_pose_scores[start_ind:start_ind + self.seg_len][None])
-                self.prop_scores.append(sp_prop_scores[start_ind:start_ind + self.seg_len][None])
-                self.meta_data.append(meta_data[None])
+                
+                if sp_prop_scores[start_ind:start_ind + self.seg_len].mean() >= self.seg_conf_thr:
+                    self.poses.append(sp_poses[start_ind:start_ind + self.seg_len][None])
+                    self.pose_scores.append(sp_pose_scores[start_ind:start_ind + self.seg_len][None])
+                    self.prop_scores.append(sp_prop_scores[start_ind:start_ind + self.seg_len][None])
+                    self.meta_data.append(meta_data[None])
                 
         
     def is_seg_continuous(self,sorted_seg_keys, start_key, seg_len, missing_th=2):
@@ -186,76 +200,124 @@ class GeneratePoseData():
 
         
 class PoseGraph(Dataset):
-    def __init__(self,json_dir,no_of_files=400):
+    def __init__(self,args,split='valid'):
+        self.args       = args
         self.edge_index = [[1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9], [9, 10], [1, 11],
               [11, 12], [12, 13], [1, 0], [0, 14], [14, 16], [0, 15], [15, 17], [2, 16], [5, 17]]
         
-        #json_dir  = '/home/irfan/Desktop/Data/shanghaitech/pose/test/' 
-        frame_dir = '/home/irfan/Desktop/Data/shanghaitech/testing/frames/'
+        self.channel   = args['channel']
+        self.mask_dir  = args['gt_dir'][split]['mask_dir']
+        self.frame_dir = args['gt_dir'][split]['frame_dir']
         
-        dataset = GeneratePoseData(json_dir,no_of_files=no_of_files)
+        dataset = GeneratePoseData(args,split=split)
         self.poses, self.pose_scores, self.prop_scores, self.meta_data = dataset.gen_dataset()
-    
-    def __getitem__(self,index):
+        # n,24,18,2
+    def __getitem__(self,index,norm=True):
         data = np.concatenate([self.poses[index], self.pose_scores[index]],axis=-1).copy()
-        return self.get_norm(data.astype('float32')) , self.meta_data[index].astype('int16')
+        data = data.astype('float32')[:,:,:self.channel]
+        if norm: data = normalize_pose(data,self.args) 
+        return data.astype('float32') , self.meta_data[index].astype('int16'), self.prop_scores[index].astype('float32')
     
     def __len__(self):
         return len(self.poses)
     
-    @staticmethod
-    def get_norm(dt):
-        dt[:,:,0]-=dt[:,:,0].min()
-        dt[:,:,1]-=dt[:,:,1].min()
-        dt[:,:,0]/=dt[:,:,0].max()
-        dt[:,:,1]/=dt[:,:,1].max()
-        dt[:,:,2]-=dt[:,:,2].min()
-        dt[:,:,2]/=dt[:,:,2].max()
+    def get_norm(self,dt):
+        for i in range(dt.shape[2]):
+            dt[:,:,i]-=dt[:,:,i].min()
+            dt[:,:,i]/=dt[:,:,i].max()
+            
+        #for i in range(dt.shape[2]):
+        #    dt[:,:,i]-=dt[:,:,i].min()
+        #    dt[:,:,i]/=dt[:,:,i].std()
+        #dt = np.clip(dt/5.0,-1.0,1.0)
         return dt
     
-    @staticmethod
-    def get_polar(dt):
-        x = np.sqrt(dt[:,:,0]**2 + dt[:,:,1]**2)
-        y = np.arctan2(dt[:,:,0],dt[:,:,1])
+    def get_clip_poses(self,scene_id, clip_id):
+        #if self.dataset == 'UBnormal':
+        #    type, scene_id, clip_id = re.findall('(abnormal|normal)_scene_(\d+)_scenario(.*)_tracks.*', clip)[0]
+        #    clip_id = type + "_" + clip_id
+        #else:
+        #scene_id, clip_id = [int(i) for i in clip.replace("label", "001").split('.')[0].split('_')]
+        #if self.shanghaitech_hr_skip((self.dataset == 'ShanghaiTech-HR'), scene_id, clip_id):
+        #    return None, None
+        clip_path = f"{str(scene_id).zfill(2)}_{str(clip_id).zfill(4)}"
+        clip_metadata_inds = np.where((self.meta_data[:, 1] == clip_id) & (self.meta_data[:, 0] == scene_id))[0]
+        clip_metadata      = self.meta_data[clip_metadata_inds]
+        clip_fig_idxs      = set([arr[2] for arr in clip_metadata])
+        try :
+            clip_res_fn        = os.path.join(self.mask_dir, clip_path+'.npy')
+            clip_gt            = np.load(clip_res_fn)
+        except:
+            clip_gt = 0
+        #if self.dataset != "UBnormal":
+        #    clip_gt = np.ones(clip_gt.shape) - clip_gt  # 1 is normal, 0 is abnormal
+        
+        clip_pose_dict = {}
+        for person_id in clip_fig_idxs:
+            _inds = np.where((self.meta_data[:, 1] == clip_id) & (self.meta_data[:, 0] == scene_id) & (self.meta_data[:, 2] == person_id))[0]
+            frame_inds = np.array([self.meta_data[i][3] for i in _inds]).astype(int)
+        
+            poses = self.poses[_inds]
+            mtds  = self.meta_data[_inds]
+            clip_pose_dict[person_id] = [Pose(_pose,_mtd) for _pose,_mtd in  zip(poses,mtds)]
+        
+        frames = glob.glob(self.frame_dir + f"{clip_path}/*")
+        return clip_gt, clip_pose_dict, frames
+
+class Pose():
+    def __init__(self,poses,mtd):
+        self.dt = poses
+        self.mtd = mtd
+        
+    def get_norm(self):
+        dt = self.dt.copy()
+        #for i in range(self.dt.shape[2]):
+        #    dt[:,:,i]-=dt[:,:,i].min()
+        #    dt[:,:,i]/=dt[:,:,i].max()
+            
+        for i in range(self.dt.shape[2]):
+            dt[:,:,i]-=dt[:,:,i].min()
+            dt[:,:,i]/=dt[:,:,i].std()
+        return dt
+    
+    def get_polar(self):
+        x = np.sqrt(self.dt[:,:,0]**2 + self.dt[:,:,1]**2)
+        y = np.arctan2(self.dt[:,:,0],self.dt[:,:,1])
         return x,y
     
-    def plot_pose(self,idx,_id=list(range(18))):
-        _dt,mtd = self.__getitem__(idx)
-        mtd=list(map(str,mtd))
+    def plot_pose(self,_id=list(range(18))):
+        mtd=list(map(str,self.mtd))
         fname = f"{mtd[0].zfill(2)}_{mtd[1].zfill(4)}/{mtd[3].zfill(3)}.jpg"
-        src = '/home/irfan/Desktop/Data/shanghaitech/testing/frames/'+fname
+        src = '/home/irfan/Desktop/Data/Pose_JSON_Data/ShanghaiTech/gt/test/frames/'+fname
         img = cv2.imread(src)
         fig,axes = plt.subplots(nrows=1,ncols=2,figsize=(6,3))
         axes[0].imshow(img)
         for i in range(24):
-            axes[1].scatter(_dt[i,_id,0],_dt[i,_id,1],marker='.')
+            axes[1].scatter(self.dt[i,_id,0],self.dt[i,_id,1],marker='.')
         axes[1].imshow(img)
         plt.show()
         plt.close()
         
-    def plot_hmap(self,idx):
-        dt,mtd = self.__getitem__(idx)
-        #_dt    = dt.transpose(1,2,0)
-        dt     = self.get_norm(dt)
-        x,y    = self.get_polar(dt)
+    def plot_hmap(self):
         
-        fig,axes = plt.subplots(nrows=1,ncols=5,figsize=(10,3))
-        axes[0].imshow(dt[:,:,0])
-        axes[1].imshow(dt[:,:,1])
-        axes[2].imshow(dt[:,:,2])
-        axes[3].imshow(x)
-        axes[4].imshow(y)
+        dt     = self.get_norm()
+        x,y    = self.get_polar()
+        
+        fig,axes = plt.subplots(nrows=1,ncols=dt.shape[2]+2,figsize=(10,3))
+        for i in range(dt.shape[2]):
+            axes[i].imshow(dt[:,:,i])
+            
+        axes[i+1].imshow(x)
+        axes[i+2].imshow(y)
         for ax in axes:
             ax.set_xticks(range(11),rotation=90)
         plt.show()
         plt.close()
         
-    def vis_data(self,idx,_id = list(range(18))):
-        dt,mdt = self.__getitem__(idx)
-        __dt = dt.copy()
-        #__dt = self.get_norm(dt)
-        __dt[:,:,0]  = dt[:,:,0] - dt[:,:,0].min()
-        __dt[:,:,1]  = dt[:,:,1] - dt[:,:,1].min()
+    def vis_data(self,_id = list(range(18))):
+        __dt = self.dt.copy()
+        __dt[:,:,0]  = self.dt[:,:,0] - self.dt[:,:,0].min()
+        __dt[:,:,1]  = self.dt[:,:,1] - self.dt[:,:,1].min()
         ofs  = int(__dt[:,:,0].max()//5)
         size = __dt.max().astype('int32')
         fig,axes = plt.subplots(nrows=1,ncols=2,figsize=(10,3))
@@ -269,7 +331,8 @@ class PoseGraph(Dataset):
         plt.show()
         plt.close()
         
-
+    
+        
 class Graph:
 
     def __init__(self,
