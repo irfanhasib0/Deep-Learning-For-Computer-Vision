@@ -13,8 +13,9 @@ def normalize_pose(pose_data, args):
     pose_data = pose_data / norm_factor
     
     #pose_data[..., :2] = 2 * pose_data[..., :2] - 1
-    pose_data[..., :2] = (pose_data[..., :2] - pose_data[..., :2].mean(axis=(0, 1))[None, None, :]) / pose_data[..., 1].std(axis=(0, 1))[None, None, None]
-    
+    pose_data = (pose_data - pose_data.mean(axis=(0, 1))[None, None, :]) / pose_data[...,1].std(axis=(0, 1))[None, None, None]
+    #pose_data *= 2.0
+    #pose_data -= 1.0
     return pose_data
 
 
@@ -22,7 +23,7 @@ class GeneratePoseData():
     def __init__(self,args,split='valid'):
         self.no_of_files = args['no_of_files']
         self.start_ofst  = 0
-        self.seg_stride  = args['seg_stride']
+        self.seg_stride  = args['seg_stride'] if split=='valid' else args['train_stride']
         self.seg_len     = args['seg_len']
         self.headless    = False
         self.seg_conf_thr= args['seg_conf_thr']

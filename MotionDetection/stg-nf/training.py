@@ -1,6 +1,9 @@
 import os
+import json
+import numpy as np
+import pandas as pd
+
 import time
-import shutil
 import torch
 import torch.optim as optim
 from tqdm import tqdm
@@ -33,7 +36,60 @@ def compute_loss(nll, reduction="mean", mean=0):
 
     return losses
 
-
+class Logger():
+    def __init__(self, keys=['train_loss','val_acc'], exp_name='exp-101'):
+        self.exp_name   = exp_name
+        self.exp_dir    = f'logs/{exp_name}/'
+        self.src_dir    = f'logs/{exp_name}/src/'
+        self.model_dir  = f'logs/{exp_name}/model/'
+        self.csv_path = f'{self.exp_dir}results.csv'
+        self.arg_path = f'{self.exp_dir}args.json'
+        self.keys     = keys
+        self.log_df   = pd.DataFrame([],columns=keys)
+        self.best_acc = -np.inf
+        
+        os.makedirs(self.exp_dir,exist_ok=True)
+        os.makedirs(self.src_dir,exist_ok=True)
+        os.makedirs(self.model_dir,exist_ok=True)
+        
+    def reset(self):
+        self.temp = {key:[] for key in self.keys}
+        
+    def update(self,res):
+        for key,val in res.items():
+            if type(val) == torch.Tensor: 
+                val = val.detach()
+                if val.device.type != 'cpu' :
+                    val = val.cpu().numpy()
+                else:
+                    val = val.numpy()
+            self.temp[key].append(val)
+            
+    def accumulate(self,epoch,state,save_best_only=True):
+        self.curr_epoch = epoch
+        for key in self.keys:
+            self.log_df.loc[epoch,key] = np.mean(self.temp[key])
+        if self.log_df.loc[epoch,'val_acc'] > self.best_acc:
+            self.best_acc   = self.log_df.loc[epoch,'val_acc']
+            if save_best_only:
+                os.system('rm -r {self.model_dir}*')
+            self.save_model(state)
+            
+    def save_src(self):
+        os.system(f"cp ./*py {self.src_dir}")
+        os.system(f"cp ./*ipynb {self.src_dir}")
+    
+    def save_args(self,args):
+        with open(self.arg_path,'w') as file:
+             json.dump(args,file)
+    
+    def save_logs(self):
+        self.log_df.to_csv(self.csv_path,index=False)
+        self.is_best = False
+        
+    def save_model(self,state):
+        torch.save(state,f'{self.model_dir}{self.curr_epoch}_{self.exp_name}_{round(self.best_acc,2)}.pth')
+        
 class Trainer:
     def __init__(self, model,
                  train_loader,
@@ -47,7 +103,6 @@ class Trainer:
         self.lr            = lr
         self.optimizer     = 'adam'
         self.weight_decay  = 5e-5
-        self.ckpt_dir = ''
         self.epochs        = epochs
         self.device        = 'cuda:0'
         self.model_confidence = False
@@ -110,63 +165,64 @@ class Trainer:
                   .format(filename, checkpoint['epoch']))
         except FileNotFoundError:
             print("No checkpoint exists from '{}'. Skipping...\n".format(self.ckpt_dir))
-
-    def train(self, log_writer=None, clip=100):
-        time_str = time.strftime("%b%d_%H%M_")
-        checkpoint_filename = time_str + '_checkpoint.pth.tar'
-        start_epoch = 0
-        num_epochs = self.epochs
+    
+        
+    def train(self, epochs=1,lgr=None):
+        #time_str = time.strftime("%b%d_%H%M_")
         self.model.train()
         self.model = self.model.to(self.device)
-        key_break = False
-        for epoch in range(start_epoch, num_epochs):
-            if key_break:
-                break
-            print("Starting Epoch {} / {}".format(epoch + 1, num_epochs))
+        lgr.reset()
+        for epoch in range(epochs):
             pbar = tqdm(self.train_loader)
             for itern, data_arr in enumerate(pbar):
                 
-                data =  data_arr[0].to(self.device, non_blocking=True)
-                data = data.permute((0,3,1,2))
-                #score = data[-2].amin(dim=-1)
-                #label = data[-1]
-                #if self.model_confidence:
-                #    samp = data[0]
-                #else:
-                samp = data[:, :2]
-                z    = self.model(samp)
-                #if nll is None:
-                #    continue
-                #if self.model_confidence:
-                #    nll = nll * score
-                losses = self.loss_func(*z)
+                data   = data_arr[0].to(self.device, non_blocking=True)
+                data   = data.permute((0,3,1,2))
+                out    = self.model(data)
+                losses = self.loss_func(*out)
                 losses['loss'].backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 100)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 pbar.set_description("Loss: {}".format(losses['loss']))
-                #log_writer.add_scalar('NLL Loss', losses['loss'], epoch * len(self.train_loader) + itern)
-            print(losses)
+                lgr.update({'train_loss':losses['loss']}) 
+            
             torch.cuda.empty_cache()
-            self.save_checkpoint(epoch, filename=checkpoint_filename)
+            state  = self.gen_checkpoint_state(epoch)
             new_lr = self.adjust_lr(epoch)
-            print('Checkpoint Saved. New LR: {0:.3e}'.format(new_lr))
+            
+        return state
 
-    def test(self):
+    def test(self,loader=None):
+        loader =self.test_loader if loader==None else loader
+        
         self.model.eval()
         self.model.to(self.device)
-        pbar = tqdm(self.test_loader)
+        pbar  = tqdm(loader)
         probs = torch.empty(0).to(self.device)
+        mu    = torch.empty(0).to(self.device)
+        std   = torch.empty(0).to(self.device)
+        results = []
         print("Starting Test Eval")
         for itern, data_arr in enumerate(pbar):
-            data  = data.permute((0,3,1,2))
-            data  = data_arr[0].to(self.device, non_blocking=True)
+            data_arr = [elem.to(self.device, non_blocking=True) for elem in data_arr]
+            data     = data_arr[0].permute(0,3,1,2)
+            scr      = data_arr[2].amin(dim=-1)
             with torch.no_grad():
-                pred,inp = self.model(data)
-                scores   = torch.abs(pred - inp).mean(dim=[1,2,3])
-            probs   = torch.cat((probs, scores), dim=0)
+                z = self.model(data[:,:2,:,:],label=torch.ones((data.shape[0])),score=scr)
+                #scores = z[1]
+                scores = torch.abs(z[0][:,:2] - z[1][:,:2]).mean(dim=[1,2,3])
+
+            probs = torch.cat([probs, scores], dim=0)
+            #mu  = torch.cat([mu, torch.abs(z[2])], dim=0)
+            #std = torch.cat([std, torch.abs(z[3])], dim=0)
+            results.append(z)
+        
         prob_mat_np = probs.cpu().detach().numpy().squeeze().copy(order='C')
-        return prob_mat_np
+        mu  = mu.cpu().detach().numpy()#.squeeze().copy(order='C')
+        std = std.cpu().detach().numpy()#.squeeze().copy(order='C')
+        
+        return prob_mat_np, mu, std, results
 
     def gen_checkpoint_state(self, epoch):
         checkpoint_state = {'epoch': epoch + 1,
