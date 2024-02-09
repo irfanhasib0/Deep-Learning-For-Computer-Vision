@@ -130,7 +130,7 @@ class StGcn(nn.Module):
             dilation=(t_dilation, 1),
             bias=bias)
         '''
-    def build_residual_layer(self,in_channels,out_channels,ksize=1,stride=1):
+    def build_residual_layer(self,in_channels,out_channels,ksize=1,stride=2):
         return  nn.Sequential(
                 nn.Conv2d(
                     in_channels,
@@ -140,8 +140,8 @@ class StGcn(nn.Module):
                 nn.BatchNorm2d(out_channels),
             )
     
-    def build_embedding_layer(self,in_channels,out_channels,ksize,dilation=1,stride=1):
-        if self.arch == 'enc' or self.arch == 'dec':
+    def build_embedding_layer(self,in_channels,out_channels,ksize,dilation=1,stride=2):
+        if self.arch == 'enc':
             return nn.Sequential(
             #nn.BatchNorm2d(in_channels),
             nn.Conv2d(
@@ -155,7 +155,7 @@ class StGcn(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.ReLU()
             )
-        if self.arch == '_dec':
+        if self.arch == 'dec':
             return nn.Sequential(
             #nn.BatchNorm2d(in_channels),
             nn.ConvTranspose2d(
@@ -163,6 +163,7 @@ class StGcn(nn.Module):
                 out_channels,
                 kernel_size = (ksize, 1),
                 padding     = (dilation*(ksize-1)//2, 0),
+                output_padding = ( 1,0),
                 stride      = (stride, 1),
                 dilation    = (dilation, 1),
                 bias        = True),
@@ -213,7 +214,7 @@ class StGcn(nn.Module):
         #x = x.view(n, self.kernel_size, kc // self.kernel_size, t, v)
         #x = x.view(n, c, t, v)
         for i in range(len(self.conv_qry)):
-            x = self.get_edge_attention(x,i,A=self.adjs[i])
+            x = self.get_edge_attention(x,i)#,A=self.adjs[i])
             
         for i in range(len(self.layer_deep)):
             x = self.layer_deep[i](x) + res
@@ -346,7 +347,7 @@ class VAE(BaseVAE):
         self.encoder     = self.build_encoder(in_channels,hidden_dims)
         
         self.t       = self.T#(self.T - len(self.hidden_dims)*(self.ksize - 1))
-        out_size     = hidden_dims[-1] * self.V * self.t
+        out_size     = hidden_dims[-1] * self.V * self.t // (2**len(self.hidden_dims))
         self.fc_mu   = nn.Linear(out_size, self.latent_dim)
         self.fc_var  = nn.Linear(out_size, self.latent_dim)
         
@@ -403,7 +404,6 @@ class VAE(BaseVAE):
         modules = []
         hidden_dims.reverse()
         hidden_dims += [out_channel]
-        #output_padding=1),
         residual = False
         for i in range(len(hidden_dims) - 1):
             modules.append(
@@ -411,7 +411,7 @@ class VAE(BaseVAE):
                       hidden_dims[i],
                       hidden_dims[i+1],
                       self.ksize,
-                      residual= not (i==0),
+                      residual= False,#not (i==0),
                       num_heads     = self.num_heads,
                       num_embd_lyrs = self.num_embd_lyrs,
                       num_deep_lyrs = self.num_deep_lyrs)
@@ -435,7 +435,8 @@ class VAE(BaseVAE):
     def decode(self, z: Tensor) -> Tensor:
         
         result = self.decoder_input(z)
-        result = result.view(-1, self.hidden_dims[-1], self.t , self.V)
+        result = result.view(-1, self.hidden_dims[-1], self.t//(2**len(self.hidden_dims)) , self.V)
+        #import pdb;pdb.set_trace()
         for i,dec in enumerate(self.decoder):
             j = len(self.adjs)-(i+1)
             result = dec(result,self.adjs[j])
