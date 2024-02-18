@@ -7,20 +7,22 @@ import torch
 from torchvision.ops import box_iou, nms
 
 import sys
-sys.path.append('../pytorch-openpose/')
-from posedet_mnet.detector import PoseDet
-from posedet_alpha.detector_alpha import PoseDet
+#sys.path.append('../pytorch-openpose/')
+#from posedet_mnet.detector import PoseDet
+#posedet = PoseDet(size=480,cpu=False)
+sys.path.append('../pytorch-openpose/posedet_alpha')
+from detector_alpha import PoseDet
 
-posedet = PoseDet(size=480,cpu=False)
+posedet = PoseDet()
 
 def hex2rgb(_hex):
     _hex = _hex.lstrip('#')
     return [int(_hex[i:i+2],16) for i in (0,2,4)]
-colors = [hex2rgb(val) for val in colors.CSS4_COLORS.values()]
+colors = [hex2rgb(val) for val in ['#FF0000','#00FF00','#0000FF','#FFFF00','#00FFFF','#FF00FF','#000000','#FFFFFF']+list(colors.TABLEAU_COLORS.values())]
 
 
 class KptTracker():
-    def __init__(self,kpts_per_obj=18,max_no_objs=25,channels=2):
+    def __init__(self,kpts_per_obj=17,max_no_objs=25,channels=2):
         self.max_no_objs = max_no_objs
         self.kpts_per_obj= kpts_per_obj
         self.channels    = channels
@@ -71,7 +73,8 @@ class OptFlow():
     def init(self):
         self.prev_gray   = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         self.p0          = cv2.goodFeaturesToTrack(self.prev_gray, mask = None, **self.feature_params) #https://docs.opencv.org/3.4/d4/d8c/tutorial_py_shi_tomasi.html
-        _,kps_mask,_,kps,poses = posedet.detect(self.frame)
+        #_,kps_mask,_,kps,poses = posedet.detect(self.frame)
+        poses = posedet.detect(self.frame)
         self.prev_frame  = self.frame.copy()
         self.flow_mask   = np.zeros_like(self.frame)
         self.prev_poses  = poses
@@ -191,15 +194,16 @@ class OptFlow():
         self.gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if len(self.prev_frame) == 0: return self.init()
             
-        _,kps_mask,_,kps,poses = posedet.detect(frame)
+        #_,kps_mask,_,kps,poses = posedet.detect(frame)
+        poses      = posedet.detect(frame)
         curr_boxes = torch.tensor([pose['bbox'] for pose in poses])
         #pts = self.refine_pts(pts)
         
         saved_prev_poses = deepcopy(self.prev_poses)
         for i in range(len(self.prev_poses)):
             prev_pose    = deepcopy(self.prev_poses[i])
-            self.kpts.add(prev_pose['pts'].reshape(-1,2),i)
-            prev_pose['pts'],acc = self.get_sparse_flow(prev_pose['pts'])
+            self.kpts.add(prev_pose['keypoints'].reshape(-1,2),i)
+            prev_pose['keypoints'],acc = self.get_sparse_flow(prev_pose['keypoints'].reshape(-1,1,2).astype('float32'))
             '''
             if len(curr_boxes):
                 valid_pts    = np.array([elem for elem in prev_pose[0] if elem[0][0]!=-1 and elem[0][1]!=-1])
@@ -219,9 +223,9 @@ class OptFlow():
                     
             '''
             dists=[]
-            for j in range(len(prev_pose['pts'])):
-                a,b = self.prev_poses[i]['pts'][j].reshape(2).astype('int32')
-                c,d = prev_pose['pts'][j].reshape(2).astype('int32')
+            for j in range(len(prev_pose['keypoints'])):
+                a,b = self.prev_poses[i]['keypoints'][j].reshape(2).astype('int32')
+                c,d = prev_pose['keypoints'][j].reshape(2).astype('int32')
                 if a>0 and c>0 : 
                     dists.append(np.sqrt((a-c)**2+(b-d)**2))
                     self.flow_mask  = cv2.line(self.flow_mask, (a,b),(c,d), self.colors[i], 1)
