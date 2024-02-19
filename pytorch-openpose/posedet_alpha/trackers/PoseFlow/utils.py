@@ -92,24 +92,18 @@ def compute_oks(anno, predict, delta):
     return oks
 
 # stack all already tracked people's info together(thanks @ZongweiZhou1)
-def stack_all_pids(track_vid, frame_list, idxs, max_pid_id, link_len):
+def stack_all_pids(track, frame_id_list, max_pid_id, link_len):
     
-    #track_vid contains track_vid[<=idx]
+    #track contains track[<=idx]
     all_pids_info = []
-    all_pids_fff = [] # boolean list, 'fff' means From Former Frame
-    all_pids_ids = [(item+1) for item in range(max_pid_id)]
+    all_pids_fff  = [] # boolean list, 'fff' means From Former Frame
     
-    for idx in np.arange(idxs,max(idxs-link_len,-1),-1):
-        for pid in range(1, track_vid[frame_list[idx]]['num_boxes']+1):
-            if len(all_pids_ids) == 0:
-                return all_pids_info, all_pids_fff
-            elif track_vid[frame_list[idx]][pid]['new_pid'] in all_pids_ids:
-                all_pids_ids.remove(track_vid[frame_list[idx]][pid]['new_pid'])
-                all_pids_info.append(track_vid[frame_list[idx]][pid])
-                if idx == idxs:
-                    all_pids_fff.append(True)
-                else:
-                    all_pids_fff.append(False)
+    idxs = len(frame_id_list)-2
+    for idx in range(idxs,max(idxs-link_len,-1),-1):
+        for pid in range(track[frame_id_list[idx]]['num_boxes']):
+            all_pids_info.append(track[frame_id_list[idx]][pid])
+            all_pids_fff.append(idx==idxs)
+                
     return all_pids_info, all_pids_fff
 
 # calculate DeepMatching Pose IoU given two boxes
@@ -155,28 +149,28 @@ def cal_pose_iou_dm(all_cors,pose1,pose2,num,mag):
     return np.mean(heapq.nlargest(num, poses_iou))
         
 # hungarian matching algorithm(thanks @ZongweiZhou1)
-def _best_matching_hungarian(all_cors, all_pids_info, all_pids_fff, track_vid_next_fid, weights, weights_fff, num, mag):
+def _best_matching_hungarian(all_cors, all_pids_info, all_pids_fff, track, weights, weights_fff, num, mag):
     
     x1, y1, x2, y2 = [all_cors[:, col] for col in range(4)]
     all_grades_details = []
     all_grades = []
     
     box1_num = len(all_pids_info)
-    box2_num = track_vid_next_fid['num_boxes']
+    box2_num = track['num_boxes']
     cost_matrix = np.zeros((box1_num, box2_num))
 
     for pid1 in range(box1_num):
-        box1_pos = all_pids_info[pid1]['box_pos']
+        box1_pos = all_pids_info[pid1]['bbox']
         box1_region_ids = find_region_cors_last(box1_pos, all_cors)
-        box1_score = all_pids_info[pid1]['box_score']
-        box1_pose = all_pids_info[pid1]['box_pose_pos']
+        box1_score = float(all_pids_info[pid1]['proposal_score'])
+        box1_pose = all_pids_info[pid1]['keypoints']
         box1_fff = all_pids_fff[pid1]
 
-        for pid2 in range(1, track_vid_next_fid['num_boxes'] + 1):
-            box2_pos = track_vid_next_fid[pid2]['box_pos']
+        for pid2 in range(1, track['num_boxes'] + 1):
+            box2_pos = track[pid2]['bbox']
             box2_region_ids = find_region_cors_next(box2_pos, all_cors)
-            box2_score = track_vid_next_fid[pid2]['box_score']
-            box2_pose = track_vid_next_fid[pid2]['box_pose_pos']
+            box2_score = float(track[pid2]['proposal_score'])
+            box2_pose = track[pid2]['keypoints']
                         
             inter = box1_region_ids & box2_region_ids
             union = box1_region_ids | box2_region_ids
@@ -184,6 +178,8 @@ def _best_matching_hungarian(all_cors, all_pids_info, all_pids_fff, track_vid_ne
             box_iou = cal_bbox_iou(box1_pos, box2_pos)
             pose_iou_dm = cal_pose_iou_dm(all_cors, box1_pose, box2_pose, num,mag)
             pose_iou = cal_pose_iou(box1_pose, box2_pose,num,mag)
+            #weights     = [1,2,1,2,0,0] 
+            #weights_fff = [0,1,0,1,0,0]
             if box1_fff:
                 grade = cal_grade([dm_iou, box_iou, pose_iou_dm, pose_iou, box1_score, box2_score], weights)
             else:
@@ -196,53 +192,56 @@ def _best_matching_hungarian(all_cors, all_pids_info, all_pids_fff, track_vid_ne
     return indexes, cost_matrix
 
 # multiprocessing version of hungarian matching algorithm
-def best_matching_hungarian(all_cors, all_pids_info, all_pids_fff, track_vid_next_fid, weights, weights_fff, num, mag, pool_size=5):
+def best_matching_hungarian(all_cors, all_pids_info, all_pids_fff, track, weights, weights_fff, num, mag, pool_size=5):
     x1, y1, x2, y2 = [all_cors[:, col] for col in range(4)]
     
     all_grades_details = []
     all_grades = []
     
     box1_num = len(all_pids_info)
-    box2_num = track_vid_next_fid['num_boxes']
+    box2_num = track['num_boxes']
     cost_matrix = np.zeros((box1_num, box2_num))
 
-    qsize = box1_num * track_vid_next_fid['num_boxes']
-    pool = ProcessPoolExecutor(max_workers=pool_size)
+    qsize = box1_num * track['num_boxes']
+    #pool  = ProcessPoolExecutor(max_workers=pool_size)
     futures = []
     for pid1 in range(box1_num):
-        box1_pos = all_pids_info[pid1]['box_pos']
+        box1_pos        = all_pids_info[pid1]['bbox']
         box1_region_ids = find_region_cors_last(box1_pos, all_cors)
-        box1_score = all_pids_info[pid1]['box_score']
-        box1_pose = all_pids_info[pid1]['box_pose_pos']
-        box1_fff = all_pids_fff[pid1]
-
-        for pid2 in range(1, track_vid_next_fid['num_boxes'] + 1):
-            future = pool.submit(best_matching_hungarian_kernel, pid1, pid2, all_cors, track_vid_next_fid, weights, weights_fff, num, mag, box1_pos, box1_region_ids, box1_score, box1_pose, box1_fff)
-            futures.append(future)
-
-    pool.shutdown(True)
-    for future in futures:
-        try : pid1, pid2, grade = future.result()
-        except: continue
-        cost_matrix[pid1, pid2 - 1] = grade
+        box1_score      = float(all_pids_info[pid1]['proposal_score'])
+        box1_pose       = all_pids_info[pid1]['keypoints']
+        box1_fff        = all_pids_fff[pid1]
+  
+        for pid2 in range(track['num_boxes']):
+            #future = pool.submit(best_matching_hungarian_kernel, pid1, pid2, all_cors, track, weights, weights_fff, num, mag, box1_pos, box1_region_ids, box1_score, box1_pose, box1_fff)
+            #futures.append(future)
+            pid1,pid2,grade=best_matching_hungarian_kernel(pid1, pid2, all_cors, track, weights, weights_fff, num, mag, box1_pos, box1_region_ids, box1_score, box1_pose, box1_fff)
+            cost_matrix[pid1, pid2] = grade
+    #pool.shutdown(True)
+    #for future in futures:
+    #    pid1, pid2, grade = future.result()
+    #    #except: 
+    #    #    print('-----------')
+    #    #    continue
+    #    cost_matrix[pid1, pid2 - 1] = grade
     m = Munkres()
     indexes = m.compute((-np.array(cost_matrix)).tolist())
 
     return indexes, cost_matrix
 
 # one iteration of hungarian matching algorithm
-def best_matching_hungarian_kernel(pid1, pid2, all_cors, track_vid_next_fid, weights, weights_fff, num, mag, box1_pos, box1_region_ids, box1_score, box1_pose, box1_fff):
-    box2_pos = track_vid_next_fid[pid2]['box_pos']
+def best_matching_hungarian_kernel(pid1, pid2, all_cors, track, weights, weights_fff, num, mag, box1_pos, box1_region_ids, box1_score, box1_pose, box1_fff):
+    box2_pos        = track[pid2]['bbox']
     box2_region_ids = find_region_cors_next(box2_pos, all_cors)
-    box2_score = track_vid_next_fid[pid2]['box_score']
-    box2_pose = track_vid_next_fid[pid2]['box_pose_pos']
+    box2_score      = float(track[pid2]['proposal_score'])
+    box2_pose       = track[pid2]['keypoints']
                         
-    inter = box1_region_ids & box2_region_ids
-    union = box1_region_ids | box2_region_ids
-    dm_iou = len(inter) / (len(union) + 0.00001)
+    inter   = box1_region_ids & box2_region_ids
+    union   = box1_region_ids | box2_region_ids
+    dm_iou  = len(inter) / (len(union) + 0.00001)
     box_iou = cal_bbox_iou(box1_pos, box2_pos)
     pose_iou_dm = cal_pose_iou_dm(all_cors, box1_pose, box2_pose, num,mag)
-    pose_iou = cal_pose_iou(box1_pose, box2_pose,num,mag)
+    pose_iou    = cal_pose_iou(box1_pose, box2_pose,num,mag)
     if box1_fff:
         grade = cal_grade([dm_iou, box_iou, pose_iou_dm, pose_iou, box1_score, box2_score], weights)
     else:
@@ -250,10 +249,10 @@ def best_matching_hungarian_kernel(pid1, pid2, all_cors, track_vid_next_fid, wei
     return (pid1, pid2, grade)
 
 # calculate number of matching points in one box from last frame
-def find_region_cors_last(box_pos, all_cors):
+def find_region_cors_last(bbox, all_cors):
     
     x1, y1, x2, y2 = [all_cors[:, col] for col in range(4)]
-    x_min, x_max, y_min, y_max = box_pos
+    x_min, x_max, y_min, y_max = bbox
     x1_region_ids = set(np.where((x1 >= x_min) & (x1 <= x_max))[0].tolist())
     y1_region_ids = set(np.where((y1 >= y_min) & (y1 <= y_max))[0].tolist())
     region_ids = x1_region_ids & y1_region_ids
@@ -261,10 +260,10 @@ def find_region_cors_last(box_pos, all_cors):
     return region_ids
 
 # calculate number of matching points in one box from next frame
-def find_region_cors_next(box_pos, all_cors):
+def find_region_cors_next(bbox, all_cors):
     
     x1, y1, x2, y2 = [all_cors[:, col] for col in range(4)]
-    x_min, x_max, y_min, y_max = box_pos
+    x_min, x_max, y_min, y_max = bbox
     x2_region_ids = set(np.where((x2 >= x_min) & (x2 <= x_max))[0].tolist())
     y2_region_ids = set(np.where((y2 >= y_min) & (y2 <= y_max))[0].tolist())
     region_ids = x2_region_ids & y2_region_ids

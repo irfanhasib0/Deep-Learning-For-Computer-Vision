@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Author: Chao Xu
-# @Email: xuchao.19962007@sjtu.edu.cn
-# @Date:   2019-10-09 17:42:10
-# @Last Modified by:   Chao Xu
-# @Last Modified time: 2019-10-27 20:20:45
-
 import os
 import numpy as np
 
@@ -12,18 +5,15 @@ from .matching import orb_matching
 from .utils import expand_bbox, stack_all_pids, best_matching_hungarian
 
 def get_box(pose, img_height, img_width):
-
-    pose = np.array(pose).reshape(-1,3)
-    xmin = np.min(pose[:,0])
-    xmax = np.max(pose[:,0])
-    ymin = np.min(pose[:,1])
-    ymax = np.max(pose[:,1])
-
+    xmin = pose[:,0].min()
+    xmax = pose[:,0].max()
+    ymin = pose[:,1].min()
+    ymax = pose[:,1].max()
     return expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height)
 
 #The wrapper of PoseFlow algorithm to be embedded in alphapose inference
 class PoseFlowWrapper():
-    def __init__(self, link=100, drop=2.0, num=7,
+    def __init__(self, link=25, drop=2.0, num=7,
                  mag=30, match=0.2, save_path='.tmp/poseflow', pool_size=5):
         # super parameters
         # 1. look-ahead LINK_LEN frames to find tracked human bbox
@@ -33,12 +23,12 @@ class PoseFlowWrapper():
         # 5. pick high-score(top NUM) keypoints when computing pose_IOU
         # 6. box width/height around keypoint for computing pose IoU
         # 7. match threshold in Hungarian Matching
-        self.link_len = link
-        self.weights = [1,2,1,2,0,0] 
+        self.link_len    = link
+        self.weights      = [1,2,1,2,0,0] 
         self.weights_fff = [0,1,0,1,0,0]
         self.drop = drop
-        self.num = num
-        self.mag = mag
+        self.num  = num
+        self.mag  = mag
         self.match_thres = match
         self.notrack = {}
         self.track = {}
@@ -54,70 +44,21 @@ class PoseFlowWrapper():
         self.prev_img = None
         print("Start pose tracking...\n")
 
-    def convert_results_to_no_track(self, alphapose_results):
-        # INPUT:
-        #   alphapose_results: the results of pose detection given by pose_nms,
-        #   not the final version for saving. Data array's format is torch.FloatTensor.
-        #   format: {"imgname": str, "result": [{'keypoints': [17,2], 'kp_score': [17,], 'proposal_score': float},...]}
-        # OUTPUT:
-        #   notrack: data array's format is list.
-        #   format: {"(str)$imgid": [{'keypoints': [17*3], 'scores': float},...]}
-        img_id             = alphapose_results["imgname"]
-        alphapose_results = alphapose_results["result"]
-        notrack = {}
-        notrack[img_id] = []
-        for human in alphapose_results:
-            keypoints = []
-            kp_preds   = human['keypoints']
-            kp_scores  = human['kp_score']
-            pro_scores = human['proposal_score']
-            for n in range(kp_scores.shape[0]):
-                keypoints.append(float(kp_preds[n, 0]))
-                keypoints.append(float(kp_preds[n, 1]))
-                keypoints.append(float(kp_scores[n]))
-            notrack[img_id].append({'keypoints': keypoints, 'scores': pro_scores})
-        return notrack
-
-    def convert_notrack_to_track(self, notrack, img_height, img_width):
-        # INPUT:
-        #   notrack: data array's format is list.
-        #   - format: {"(str)$imgid": [{'keypoints': [17*3], 'scores': float},...]}
-        #   img_height: int
-        #   img_width: int
-        # OUTPUT:
-        #   track: tracked human poses
-        #   - format: {'num_boxes': int, '$1-indexed human id': {'box_score': float, 'box_pos': [4], 
-        #              'box_pose_pos': [17,2], 'box_pose_score': [17,1]}, ...}
-        track = {}
-        for img_id in sorted(notrack.keys()):
-            track[img_id] = {'num_boxes':len(notrack[img_id])}
-            for bid in range(len(notrack[img_id])):
-                track[img_id][bid+1] = {}
-                track[img_id][bid+1]['box_score']      = notrack[img_id][bid]['scores']
-                track[img_id][bid+1]['box_pos']        = get_box(notrack[img_id][bid]['keypoints'], img_height, img_width)
-                track[img_id][bid+1]['box_pose_pos']   = np.array(notrack[img_id][bid]['keypoints']).reshape(-1,3)[:,0:2]
-                track[img_id][bid+1]['box_pose_score'] = np.array(notrack[img_id][bid]['keypoints']).reshape(-1,3)[:,-1]
-        return track
+    
     
     def _return(self,frame_id):
-        for pid in range(1, self.track[frame_id]['num_boxes']+1):
+        for pid in range(self.track[frame_id]['num_boxes']):
             self.track[frame_id][pid]['new_pid'] = pid
             self.track[frame_id][pid]['match_score'] = 0
-        #make directory to store matching files
-        #if not os.path.exists(self.save_match_path):
-        #    os.mkdir(self.save_match_path)
-        return self.final_result_by_name(frame_id)
+        return self.track[frame_id]#self.final_result_by_name(frame_id)
 
         
     def step(self, img, alphapose_results):
-        frame_id   = alphapose_results["imgname"]
-        _notrack   = self.convert_results_to_no_track(alphapose_results)
-        self.notrack.update(_notrack)
-        img_height, img_width, _ = img.shape
-        _track = self.convert_notrack_to_track(_notrack, img_height, img_width)
-        self.track.update(_track)
+        frame_id   = alphapose_results["imgname"]  
+        self.track[frame_id] = {}
+        self.track[frame_id].update({pid:res for pid,res in enumerate(alphapose_results['result'])})
+        self.track[frame_id].update({'num_boxes':len(alphapose_results['result'])})#self.convert_results_to_no_track(alphapose_results)
         
-        #track
         # init tracking info of the first frame in one video
         if len(self.track.keys()) == 1:
             self.prev_img = img.copy()
@@ -131,53 +72,39 @@ class PoseFlowWrapper():
         
         if self.track[frame_id]['num_boxes'] == 0:
             self.track[frame_id] = copy.deepcopy(self.track[prev_frame_id])
-            self.prev_img = img.copy()
-            return self.final_result_by_name(frame_id)
+            self.prev_img        = img.copy()
+            return self.track[frame_id]#self.final_result_by_name(frame_id)
         
-        cur_all_pids, cur_all_pids_fff = stack_all_pids(self.track, frame_id_list, len(frame_id_list)-2, self.max_pid_id, self.link_len)
-        match_indexes, match_scores = best_matching_hungarian(
-            all_cors, cur_all_pids, cur_all_pids_fff, self.track[frame_id], self.weights, self.weights_fff, self.num, self.mag, pool_size=self.pool_size)
-
+        cur_all_pids, cur_all_pids_fff = stack_all_pids(self.track, 
+                                                        frame_id_list,
+                                                        self.max_pid_id, 
+                                                        self.link_len)
+        
+        match_indexes, match_scores    = best_matching_hungarian(all_cors,
+                                                                 cur_all_pids,
+                                                                 cur_all_pids_fff,
+                                                                 self.track[frame_id],
+                                                                 self.weights,
+                                                                 self.weights_fff,
+                                                                 self.num,
+                                                                 self.mag,
+                                                                 pool_size=self.pool_size)
+        #print(match_scores)
         for pid1, pid2 in match_indexes:
             if match_scores[pid1][pid2] > self.match_thres:
-                self.track[frame_id][pid2+1]['new_pid'] = cur_all_pids[pid1]['new_pid']
-                self.max_pid_id = max(self.max_pid_id, self.track[frame_id][pid2+1]['new_pid'])
-                self.track[frame_id][pid2+1]['match_score'] = match_scores[pid1][pid2]
+                self.track[frame_id][pid2]['new_pid']     = cur_all_pids[pid1]['new_pid']
+                self.max_pid_id                           = max(self.max_pid_id, self.track[frame_id][pid2]['new_pid'])
+                self.track[frame_id][pid2]['match_score'] = match_scores[pid1][pid2]
 
         # add the untracked new person
-        for next_pid in range(1, self.track[frame_id]['num_boxes'] + 1):
+        for next_pid in range(self.track[frame_id]['num_boxes']):
             if 'new_pid' not in self.track[frame_id][next_pid]:
                 self.max_pid_id += 1
                 self.track[frame_id][next_pid]['new_pid'] = self.max_pid_id
                 self.track[frame_id][next_pid]['match_score'] = 0
 
         self.prev_img = img.copy()
-        return self.final_result_by_name(frame_id)
-
-    @property
-    def num_persons(self):
-        # calculate number of people
-        num_persons = 0
-        frame_list = sorted(list(self.track.keys()))
-        for fid, frame_id in enumerate(frame_list):
-            for pid in range(1, self.track[frame_id]['num_boxes']+1):
-                num_persons = max(num_persons, self.track[frame_id][pid]['new_pid'])
-        return num_persons
-
-    @property
-    def final_results(self):
-        # export tracking result into notrack json data
-        frame_list = sorted(list(self.track.keys()))
-        for fid, frame_id in enumerate(frame_list):
-            for pid in range(self.track[frame_id]['num_boxes']):
-                self.notrack[frame_id][pid]['idx'] = self.track[frame_id][pid+1]['new_pid']
-        return self.notrack
-
-    def final_result_by_name(self, frame_id):
-        # export tracking result into notrack json data by frame name
-        for pid in range(self.track[frame_id]['num_boxes']):
-            self.notrack[frame_id][pid]['idx'] = self.track[frame_id][pid+1]['new_pid']
-        return self.notrack[frame_id]
+        return self.track[frame_id]#self.final_result_by_name(frame_id)
 
 
 
