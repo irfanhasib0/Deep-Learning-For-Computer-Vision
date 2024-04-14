@@ -7,12 +7,11 @@ import torch
 from torchvision.ops import box_iou, nms
 
 import sys
-#sys.path.append('../pytorch-openpose/')
+sys.path.append('../pytorch-openpose/')
 #from posedet_mnet.detector import PoseDet
 #posedet = PoseDet(size=480,cpu=False)
 sys.path.append('../pytorch-openpose/posedet_alpha')
 from detector_alpha import PoseDet
-
 posedet = PoseDet()
 
 def hex2rgb(_hex):
@@ -74,9 +73,9 @@ class OptFlow():
         self.prev_gray   = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         self.p0          = cv2.goodFeaturesToTrack(self.prev_gray, mask = None, **self.feature_params) #https://docs.opencv.org/3.4/d4/d8c/tutorial_py_shi_tomasi.html
         #_,kps_mask,_,kps,poses = posedet.detect(self.frame)
-        poses = posedet.detect(self.frame)
+        poses, _, _, _ = posedet.detect(self.frame)
         self.prev_frame  = self.frame.copy()
-        self.flow_mask   = np.zeros_like(self.frame)
+        self.flow_mask   = deque(maxlen=10)
         self.prev_poses  = poses
         return self.frame,self.frame,self.dists
     
@@ -185,7 +184,7 @@ class OptFlow():
         
         acc = sum([p[0][0]>0 for p in p1])/sum([p[0][0]>0 for p in p0])  
         return p2,round(acc,2)
-        
+    
     def run(self,frame):
         
         flow_img   = frame
@@ -193,9 +192,11 @@ class OptFlow():
         self.cnv   = frame.copy()
         self.gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if len(self.prev_frame) == 0: return self.init()
-            
+        if not len(self.prev_poses) or 'keypoints' not in self.prev_poses[0]:
+            return self.init()
         #_,kps_mask,_,kps,poses = posedet.detect(frame)
-        poses      = posedet.detect(frame)
+        poses, _, _, _      = posedet.detect(frame)
+        #import pdb; pdb.set_trace()
         curr_boxes = torch.tensor([pose['bbox'] for pose in poses])
         #pts = self.refine_pts(pts)
         
@@ -228,8 +229,11 @@ class OptFlow():
                 c,d = prev_pose['keypoints'][j].reshape(2).astype('int32')
                 if a>0 and c>0 : 
                     dists.append(np.sqrt((a-c)**2+(b-d)**2))
-                    self.flow_mask  = cv2.line(self.flow_mask, (a,b),(c,d), self.colors[i], 1)
-            text = f"Acc : {acc} Vel : {round(np.mean(dists),2)}"
+                    _mask = np.zeros_like(self.frame).astype(np.uint8)
+                    self.flow_mask.append(cv2.line(_mask, (a,b),(c,d), self.colors[i], 1))
+            vel = np.nan_to_num(np.mean(dists))
+            self.dists.append([vel, np.nan_to_num(acc)])
+            text = f"Vel : {round(vel,2)}"
             (tw,th) = cv2.getTextSize(text,self.font,0.4,1)[0]
             self.cnv  = cv2.putText(self.cnv, text, (20, 20+(th+3)*(i+1)),self.font, 0.4, self.colors[i], 1)
             #    #self.flow_mask  = cv2.circle(self.flow_mask,(a,b),5, self.color[i].tolist(),-1)
@@ -249,9 +253,9 @@ class OptFlow():
         self.prev_frame = self.frame
         self.prev_poses = poses if len(poses)>len(self.prev_poses) else self.prev_poses
         
-        flow_img  = cv2.add(self.frame,self.flow_mask)    
+        flow_img = np.uint8(0.3 * self.frame + 0.7* np.array(self.flow_mask,dtype=np.uint8).sum(axis=0)).astype(np.uint8)
         return flow_img,self.cnv,np.array(self.dists)
-    '''
+    
     def run_v1(self,frame):
         
         flow_img = frame
@@ -297,4 +301,4 @@ class OptFlow():
         
         flow_img  = cv2.add(self.frame,self.flow_mask)    
         return flow_img,self.cnv,np.array(self.dists)
-        '''
+        
