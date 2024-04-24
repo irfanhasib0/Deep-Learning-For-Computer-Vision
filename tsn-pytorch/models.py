@@ -5,11 +5,8 @@ from transforms import *
 from torch.nn.init import normal, constant
 
 class TSN(nn.Module):
-    def __init__(self, num_class, num_segments, modality,
-                 base_model='resnet101', new_length=None,
-                 consensus_type='avg', before_softmax=True,
-                 dropout=0.8,
-                 crop_num=1, partial_bn=True):
+    def __init__(self, num_class, num_segments, modality, base_model='resnet101', new_length=None, \
+                 consensus_type='avg', before_softmax=True, dropout=0.8, crop_num=1, partial_bn=True):
         super(TSN, self).__init__()
         self.modality = modality
         self.num_segments = num_segments
@@ -27,13 +24,13 @@ class TSN(nn.Module):
             self.new_length = new_length
 
         print(("""
-Initializing TSN with base model: {}.
-TSN Configurations:
-    input_modality:     {}
-    num_segments:       {}
-    new_length:         {}
-    consensus_module:   {}
-    dropout_ratio:      {}
+        Initializing TSN with base model: {}.
+        TSN Configurations:
+        input_modality:     {}
+        num_segments:       {}
+        new_length:         {}
+        consensus_module:   {}
+        dropout_ratio:      {}
         """.format(base_model, self.modality, self.num_segments, self.new_length, consensus_type, self.dropout)))
 
         self._prepare_base_model(base_model)
