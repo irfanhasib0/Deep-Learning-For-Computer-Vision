@@ -1,0 +1,15 @@
+datasets_dir: /home/irfan/Desktop/Code/datasets
+weights_dir: /home/irfan/Desktop/Code/Deep-Learning-For-Computer-Vision/weights
+runs_dir: /home/irfan/Desktop/Code/Deep-Learning-For-Computer-Vision/runs
+uuid: dde6c853ba0d2a768359fc973b2495b88408a0b13c8b72d05f2f4f8f1e0f201b
+sync: true
+api_key: ''
+clearml: true
+comet: true
+dvc: true
+hub: true
+mlflow: true
+neptune: true
+raytune: true
+tensorboard: true
+wandb: true
