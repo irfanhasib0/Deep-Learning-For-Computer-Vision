@@ -9,4 +9,9 @@
 
 - Pose Tracking
   -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-detection-and-tracking/results/result_3_50.gif)
+  
+- DeeplabV3
+  -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3plus/results/result.png)
 
+- YOLO-V8
+  -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
