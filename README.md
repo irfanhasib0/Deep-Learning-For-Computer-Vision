@@ -4,7 +4,7 @@
   -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly-detection/lock_1.gif)
 
 - Pose Tracking
-  <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-detection-and-tracking/results/result_3_50.gif align='left' width='90%'>
+  <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-detection-and-tracking/results/result_3_50.gif align='left' width='100%'>
 
 - DeeplabV3
   - I have implemented UNet from scratch a while ago here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
