@@ -9,7 +9,7 @@
 
 - Pose Tracking
   -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-detection-and-tracking/results/result_3_50.gif)
-  
+  <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-detection-and-tracking/results/result_3_50.gif align='left' width='90%'>
 - DeeplabV3
   -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3plus/results/result.png)
 
