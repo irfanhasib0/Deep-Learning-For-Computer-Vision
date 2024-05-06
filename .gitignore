@@ -1,0 +1,12 @@
+_python38
+_torch-1.12.0
+logs
+models
+extra
+todo
+runs
+checkpoints
+thirdparty
+*.onnx
+*.pth
+*.pkl
