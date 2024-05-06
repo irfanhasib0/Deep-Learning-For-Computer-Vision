@@ -1,7 +1,7 @@
 # Deep-Learning-For-Computer-Vision
 
 - Abnormal Motion Detection
-  -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly-detection/lock_1.gif)
+  -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly-detection/results/lock_1.gif)
 
 - Pose Tracking
   <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-detection-and-tracking/results/result_3_50.gif align='left' width='100%'>
