@@ -64,4 +64,4 @@ A group of people standing in front of an igloo .
 
 ## Diffusion
  - ![diffusion](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
- - ![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion/results/diff_car_2.png)
+ - ![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png)
