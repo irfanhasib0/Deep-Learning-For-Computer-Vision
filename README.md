@@ -26,6 +26,7 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="47%">
 </div>
 <br>
+
 ## YOLO-V8 (Working on top of Ultralytrics source code)
   - yolo-v8 is a modified version of "Ultralytics"
   - ![yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
@@ -46,8 +47,8 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 Note : vision-transformer/ is a on progress work. The code is not organized at all.
 
 - Results:
-
-'''
+python
+```
 Epoch: 1, Train loss: 5.342, Val loss: 4.104, Epoch time = 51.305s
 Epoch: 2, Train loss: 3.759, Val loss: 3.306, Epoch time = 55.960s
 Epoch: 3, Train loss: 3.156, Val loss: 2.888, Epoch time = 65.804s
@@ -66,7 +67,7 @@ Epoch: 15, Train loss: 1.172, Val loss: 1.936, Epoch time = 96.887s
 Epoch: 16, Train loss: 1.101, Val loss: 1.915, Epoch time = 97.977s
 Epoch: 17, Train loss: 1.035, Val loss: 1.895, Epoch time = 97.573s
 Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
-'''
+```
 
 ### Sample Result of trained model
 '''
