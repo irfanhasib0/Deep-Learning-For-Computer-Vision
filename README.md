@@ -12,8 +12,10 @@
   - ![deeplabv3](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/)
   - I implemented UNet from scratch here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
   In this repository I am working on DeeplabV3. Here are some resuts of training on VOC Dataset. I have borrowed some code from the internet since now a days lot's of technology are coming every day. It's not practical to implement everything from scratch and stay up to date at the same time.
-  -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result.png)
-
+  <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_3.png width="60%">
+  <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png width="40%">
+  
+  
 ## YOLO-V8
   - yolo-v8 is a modified version of "Ultralytics"
   - ![yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
