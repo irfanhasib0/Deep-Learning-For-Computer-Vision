@@ -1,6 +1,13 @@
 # Deep-Learning-For-Computer-Vision
 Most of my works before 2022 were implementation from scratch. Now a days every day new papers are being publishesd. It's impossible to implement them from scratch. For catching up with SOTA algorithms sometimes I work on top of the publicly available source code of respective researches.
 
+- [] Abnormal  Motion Detection (From Scratch)
+- [] Pose Detection and Tracking
+- [] Semantc segmentation with DeepLabV3
+- [] Yolo-v8 for object detection 
+- [] Transformer for translation (From Scratch)
+- [] Diffusion model for car image generation.
+
 ## Abnormal Motion Detection (Implementation From scratch)
   - ![motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
   - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
@@ -26,6 +33,7 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="47%">
 </div>
 <br>
+-------------------------------------------------------------------------------------
 
 ## YOLO-V8 (Working on top of Ultralytrics source code)
   - yolo-v8 is a modified version of "Ultralytics"
