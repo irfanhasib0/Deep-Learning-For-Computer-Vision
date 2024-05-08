@@ -1,23 +1,32 @@
 # Deep-Learning-For-Computer-Vision
+Most of my works before 2022 were implementation from scratch. Now a days every day new papers are being publishesd. It's impossible to implement them from scratch. For catching up with SOTA algorithms I have started working on top of the publicly available source codes of respective researches.
 
-## Abnormal Motion Detection
+## Abnormal Motion Detection (Implementation From scratch)
   - ![motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
+  - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
+  - src/feat_tracker.py : Detects key feature points and tracks them.
+              - Feature Points : good feature to track / human pose key points
+              - Tracker : optical flow based tracker / pose flow tracker
+  - src/gui.py : Visualize audio intensity and feature point velocity.
   - ![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif)
 
-## Pose Tracking
+## Pose Tracking (Working on top of existing public source code)
   - ![pose-tracking](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose_tracking/)
+  - posedet_mnet  : OpenPose with mobilenet
+  - posedet_alpha : alpha pose 
+  - posedet_alpha/tracker/Pose Flow : Pose Flow tracker.
   <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
 
-## DeeplabV3
+## DeeplabV3 (Working on top of existing public source code)
   - ![deeplabv3](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/)
   - I implemented UNet from scratch here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
   In this repository I am working on DeeplabV3. Here are some resuts of training on VOC Dataset. I have borrowed some code from the internet since now a days lot's of technology are coming every day. It's not practical to implement everything from scratch and stay up to date at the same time.
 <div>
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_3.png align='left' width="47%">
-  <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="47%">
+<img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="47%">
 </div>
   
-## YOLO-V8
+## YOLO-V8 (Working on top of Ultralytrics source code)
   - yolo-v8 is a modified version of "Ultralytics"
   - ![yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
