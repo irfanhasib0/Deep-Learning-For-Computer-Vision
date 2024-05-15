@@ -8,26 +8,29 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 - <a href='#transformer'> Transformer for translation (From Scratch)</a>
 - <a href='#diffusion'> Diffusion model for car image generation.</a>
 
-## Abnormal Motion Detection (Implementation From scratch)
 <a id='abn_motion'></a>
+## Abnormal Motion Detection (Implementation From scratch)
+
   - ![motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
   - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
   - src/feat_tracker.py : Detects key feature points and tracks them.
               - Feature Points : good feature to track / human pose key points
               - Tracker : optical flow based tracker / pose flow tracker
   - src/gui.py : Visualize audio intensity and feature point velocity.
-  - ![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif)
+  - !(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif)
 
-## Pose Tracking (Working on top of existing public source code)
 <a id='pose_track'></a>
+## Pose Tracking (Working on top of existing public source code)
+
   - ![pose-tracking](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose_tracking/)
   - posedet_mnet  : OpenPose with mobilenet
   - posedet_alpha : alpha pose 
   - posedet_alpha/tracker/Pose Flow : Pose Flow tracker.
   <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
 
-## DeeplabV3 (Working on top of existing public source code)
 <a id='sem_seg'></a>
+## DeeplabV3 (Working on top of existing public source code)
+
   - ![deeplabv3](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/)
   - I implemented UNet from scratch here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
   In this repository I am working on DeeplabV3. Here are some resuts of training on VOC Dataset. I have borrowed some code from the internet since now a days lot's of technology are coming every day. It's not practical to implement everything from scratch and stay up to date at the same time.
@@ -36,21 +39,21 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="47%">
 </div>
 <br>
--------------------------------------------------------------------------------------
 
-## YOLO-V8 (Working on top of Ultralytrics source code)
 <a id='#yolov8'></a>
+## YOLO-V8 (Working on top of Ultralytrics source code)
+
   - yolo-v8 is a modified version of "Ultralytics"
   - ![yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
   - ![yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/)
-  
-  ![link](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
-  -![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
+  ![notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
+  -!(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
 
-## Transformer
 <a id='#transformer'></a>
-  -![source code](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/transformer-models/)
+## Transformer
+
+  -![transformer-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/transformer-models/)
 ### Usage :
 #### Main note book 
   - transforer/transformer.ipynb 
@@ -89,11 +92,12 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
 - Output (English) : A group of people standing in front of an igloo . 
 
 
-## Diffusion
 <a id='#diffusion'></a>
+## Diffusion
+
 A simple diffusion model has been trained on car images.
 
- - ![source code](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
+ - ![diffusion-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
 
 ### Results
- - ![](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png)
+ - !(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png)
