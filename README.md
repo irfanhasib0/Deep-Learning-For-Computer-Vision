@@ -22,7 +22,6 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 ### Results
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif align='left' width='100%'>
-
 ```
 ```
 
@@ -36,9 +35,7 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 ### Results
 <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
-
 ```
-
 ```
 
 <a id='sem_seg'></a>
@@ -53,9 +50,7 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_3.png align='left' width="47%">
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="48%">
 </div>
-
 ```
-
 ```
 
 <a id='#yolov8'></a>
@@ -68,9 +63,7 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
   [notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
 ### Results
   <img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg' align='left' width='100%'>
-
 ```
-
 ```
 
 <a id='#transformer'></a>
@@ -127,7 +120,6 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
 
 ### Results
 <img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
-
 ```
 ```
 
