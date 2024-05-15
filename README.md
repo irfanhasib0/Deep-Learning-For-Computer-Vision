@@ -17,7 +17,9 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
               - Feature Points : good feature to track / human pose key points
               - Tracker : optical flow based tracker / pose flow tracker
   - src/gui.py : Visualize audio intensity and feature point velocity.
-  - !(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif)
+
+### Results
+<img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif align='left' width='100%'>
 
 <a id='pose_track'></a>
 ## Pose Tracking (Working on top of existing public source code)
@@ -26,6 +28,8 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
   - posedet_mnet  : OpenPose with mobilenet
   - posedet_alpha : alpha pose 
   - posedet_alpha/tracker/Pose Flow : Pose Flow tracker.
+
+### Results
   <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
 
 <a id='sem_seg'></a>
@@ -101,4 +105,4 @@ A simple diffusion model has been trained on car images.
  - ![diffusion-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
 
 ### Results
- - !(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png)
+ - <img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
