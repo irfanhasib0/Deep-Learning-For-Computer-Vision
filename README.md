@@ -1,6 +1,6 @@
 <a id=table_of_content></a>
 # Deep-Learning-For-Computer-Vision
-Most of my works before 2022 were implementation from scratch. Now a days every day new papers are being publishesd. It's impossible to implement them from scratch. For catching up with SOTA algorithms sometimes I work on top of the publicly available source code of respective researches.
+Most of my [works](https://irfanhasib0.github.io) before 2022 were implementation from scratch. Now a days every day new papers are being publishesd. It's impossible to implement each them from scratch. For catching up with SOTA algorithms sometimes I work on top of the publicly available source code of respective researches.
 
 - <a href='#abn_motion'> Abnormal  Motion Detection (From Scratch)</a>
 - <a href='#pose_track'> Pose Detection and Tracking</a>
