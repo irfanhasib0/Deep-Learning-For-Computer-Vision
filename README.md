@@ -27,8 +27,8 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 ## Pose Tracking (Working on top of existing public source code)
 <a href='#table_of_content'> back </a>
   - Code : [pose-tracking](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose_tracking/)
-  - posedet_mnet  : OpenPose with mobilenet
-  - posedet_alpha : alpha pose 
+  - posedet_mnet  : [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose) with mobilenet
+  - posedet_alpha : [AlphaPose](https://github.com/MVIG-SJTU/AlphaPose)
   - posedet_alpha/tracker/Pose Flow : Pose Flow tracker.
 
 ### Results
@@ -42,18 +42,19 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
   Inspired from ![deeplabv3plus](https://github.com/VainF/DeepLabV3Plus-Pytorch)
   - I implemented UNet from scratch here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
   In this repository I am working on DeeplabV3. Here are some resuts of training on VOC Dataset. I have borrowed some code from the internet since now a days lot's of technology are coming every day. It's not practical to implement everything from scratch and stay up to date at the same time.
-<div>
+<div class='row' width='100%'>
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_3.png align='left' width="47%">
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="48%">
 </div>
------------------------------------------------------------------
+<hr>
+
 <a id='#yolov8'></a>
 ## YOLO-V8 (Working on top of public source code)
 <a id='#table_of_content'> back </a>
   - yolo-v8 is a modified version of publicly available source code of [Ultralytics](https://github.com/ultralytics/ultralytics)
   - Code : [yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
-  - Code : [yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/)
+  - Code : [yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/) ; 
   [notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
 ### Results
   [](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
