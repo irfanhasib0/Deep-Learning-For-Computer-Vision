@@ -119,7 +119,7 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
  - Code : [diffusion-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
 
 ### Results
-<img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
+<img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_1.png' align='left' width='100%'>
 ```
 ```
 
