@@ -22,8 +22,6 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 ### Results
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif align='left' width='100%'>
-</br>   
-</br>
 
 ```
 ```
@@ -38,8 +36,10 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 ### Results
 <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
-</br>   
-</br>
+
+```
+
+```
 
 <a id='sem_seg'></a>
 ## DeeplabV3 (Working on top of existing public source code)
@@ -53,22 +53,25 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_3.png align='left' width="47%">
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="48%">
 </div>
-</br>   
-</br>
+
+```
+
+```
 
 <a id='#yolov8'></a>
 ## YOLO-V8 (Working on top of public source code)
-<a id='#table_of_content'> back </a>
+<a href='#table_of_content'> back </a>
   - yolo-v8 is a modified version of publicly available source code of [Ultralytics](https://github.com/ultralytics/ultralytics)
   - Code : [yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
   - Code : [yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/) ; 
   [notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
 ### Results
-  [](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
-</br>   
-</br>
+  <img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg' align='left' width='100%'>
 
+```
+
+```
 
 <a id='#transformer'></a>
 ## Transformer
@@ -87,7 +90,7 @@ Code : [transformer-models](https://github.com/irfanhasib0/Deep-Learning-For-Com
 Note : vision-transformer/ is a on progress work. The code is not organized at all.
 
 - Results:
-python
+
 ```
 Epoch: 1, Train loss: 5.342, Val loss: 4.104, Epoch time = 51.305s
 Epoch: 2, Train loss: 3.759, Val loss: 3.306, Epoch time = 55.960s
@@ -111,10 +114,9 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
 
 ### Sample Result of trained model
 - Input (German)   : Eine Gruppe von Menschen steht vor einem Iglu . 
-- Output (English) : A group of people standing in front of an igloo . 
-</br>   
-</br>
-
+- Output (English) : A group of people standing in front of an igloo .
+```
+```
 
 <a id='#diffusion'></a>
 ## Diffusion
@@ -125,7 +127,8 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
 
 ### Results
 <img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
-</br>   
-</br>
+
+```
+```
 
 
