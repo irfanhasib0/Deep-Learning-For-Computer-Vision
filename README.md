@@ -46,11 +46,11 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_3.png align='left' width="47%">
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/results/result_4.png align='left' width="48%">
 </div>
-
+-----------------------------------------------------------------
 <a id='#yolov8'></a>
-## YOLO-V8 (Working on top of Ultralytrics source code)
+## YOLO-V8 (Working on top of public source code)
 <a id='#table_of_content'> back </a>
-  - yolo-v8 is a modified version of "Ultralytics"
+  - yolo-v8 is a modified version of publicly available source code of [Ultralytics](https://github.com/ultralytics/ultralytics)
   - Code : [yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
   - Code : [yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/)
