@@ -1,3 +1,4 @@
+<a id=table_of_content></a>
 # Deep-Learning-For-Computer-Vision
 Most of my works before 2022 were implementation from scratch. Now a days every day new papers are being publishesd. It's impossible to implement them from scratch. For catching up with SOTA algorithms sometimes I work on top of the publicly available source code of respective researches.
 
@@ -10,8 +11,9 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 <a id='abn_motion'></a>
 ## Abnormal Motion Detection (Implementation From scratch)
+<a href='#table_of_content'> back </a>
 
-  - ![motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
+  - Code : [motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
   - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
   - src/feat_tracker.py : Detects key feature points and tracks them.
               - Feature Points : good feature to track / human pose key points
@@ -23,19 +25,20 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 <a id='pose_track'></a>
 ## Pose Tracking (Working on top of existing public source code)
-
-  - ![pose-tracking](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose_tracking/)
+<a href='#table_of_content'> back </a>
+  - Code : [pose-tracking](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose_tracking/)
   - posedet_mnet  : OpenPose with mobilenet
   - posedet_alpha : alpha pose 
   - posedet_alpha/tracker/Pose Flow : Pose Flow tracker.
 
 ### Results
-  <img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
+<img src = https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/pose-tracking/results/result_3_50.gif align='left' width='100%'>
 
 <a id='sem_seg'></a>
 ## DeeplabV3 (Working on top of existing public source code)
+<a href='#table_of_content'> back </a>
 
-  - ![deeplabv3](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/)
+  - Code : [deeplabv3](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/)
   Inspired from ![deeplabv3plus](https://github.com/VainF/DeepLabV3Plus-Pytorch)
   - I implemented UNet from scratch here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
   In this repository I am working on DeeplabV3. Here are some resuts of training on VOC Dataset. I have borrowed some code from the internet since now a days lot's of technology are coming every day. It's not practical to implement everything from scratch and stay up to date at the same time.
@@ -47,18 +50,20 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 
 <a id='#yolov8'></a>
 ## YOLO-V8 (Working on top of Ultralytrics source code)
-
+<a id='#table_of_content'> back </a>
   - yolo-v8 is a modified version of "Ultralytics"
-  - ![yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
+  - Code : [yolo-v8](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/)
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
-  - ![yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/)
-  ![notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
+  - Code : [yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/)
+  [notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
   -!(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
 
 <a id='#transformer'></a>
 ## Transformer
+<a href='#table_of_content'> back </a>
+<p> A simple transformer has been trained on <a href='https://arxiv.org/abs/1605.00459'>Multi30k</a> dataset for German to English transation. </p>
 
-  -![transformer-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/transformer-models/)
+Code : [transformer-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/transformer-models/)
 ### Usage :
 #### Main note book 
   - transforer/transformer.ipynb 
@@ -99,10 +104,10 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
 
 <a id='#diffusion'></a>
 ## Diffusion
+<a href='#table_of_content'> back </a>
+<p>A simple diffusion model has been trained on car images.</p>
 
-A simple diffusion model has been trained on car images.
-
- - ![diffusion-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
+ - Code : [diffusion-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
 
 ### Results
- - <img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
+<img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
