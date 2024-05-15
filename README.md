@@ -56,7 +56,8 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
   - yolo-v4 is my personal implementation of yolo v4 from scratch. It can achieve aroung mAP 25 with mobilenet with alpha = 1 and image size 224x224. I have taken help from other resouces available in the internet for this work.
   - Code : [yolo-v4](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v4/)
   [notebook](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/Minimal_yolo_coco-v-2.0-exp-COCO.ipynb)
-  -!(https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
+### Results
+  [](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/yolo-v8/results/val_batch0_pred.jpg)
 
 <a id='#transformer'></a>
 ## Transformer
