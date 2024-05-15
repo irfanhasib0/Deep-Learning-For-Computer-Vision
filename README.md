@@ -25,6 +25,9 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 </br>   
 </br>
 
+```
+```
+
 <a id='pose_track'></a>
 ## Pose Tracking (Working on top of existing public source code)
 <a href='#table_of_content'> back </a>
@@ -121,7 +124,7 @@ Epoch: 18, Train loss: 0.976, Val loss: 1.911, Epoch time = 97.933s
  - Code : [diffusion-models](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/)
 
 ### Results
-<img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>v
+<img src='https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/diffusion-models/results/diff_car_2.png' align='left' width='100%'>
 </br>   
 </br>
 
