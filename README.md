@@ -32,6 +32,7 @@ Most of my works before 2022 were implementation from scratch. Now a days every 
 ## DeeplabV3 (Working on top of existing public source code)
 
   - ![deeplabv3](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/deeplabv3/)
+  Inspired from ![deeplabv3plus](https://github.com/VainF/DeepLabV3Plus-Pytorch)
   - I implemented UNet from scratch here ![UNet](https://github.com/irfanhasib0/CNN-Projects/blob/master/CNN_Basic/U-Net_cityscapes.ipynb)
   In this repository I am working on DeeplabV3. Here are some resuts of training on VOC Dataset. I have borrowed some code from the internet since now a days lot's of technology are coming every day. It's not practical to implement everything from scratch and stay up to date at the same time.
 <div>
