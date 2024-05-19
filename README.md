@@ -4,7 +4,7 @@ Most of my [works](https://irfanhasib0.github.io) before 2022 were implementatio
 
 - <a href='#abn_motion'> Abnormal  Motion Detection (From Scratch)</a>
 - <a href='#pose_track'> Pose Detection and Tracking</a>
-- <a href='#sem_seg'>Semantc segmentation with DeepLabV3</a>
+- <a href='#sem_seg'>Semantic segmentation with DeepLabV3</a>
 - <a href='#yolov8'>Yolo-v8 for object detection </a>
 - <a href='#transformer'> Transformer for translation (From Scratch)</a>
 - <a href='#diffusion'> Diffusion model for car image generation.</a>
@@ -12,7 +12,8 @@ Most of my [works](https://irfanhasib0.github.io) before 2022 were implementatio
 <a id='abn_motion'></a>
 ## Abnormal Motion Detection (Implementation From scratch)
 <a href='#table_of_content'> back </a>
-I am researching on human activity anomaly detection from CCTV footage personally. Here it is a very minimal demonstration on what I wish to achieve through my research. A large part of this work is not public yet. I am trying out VAE, VQVAE, Transformer, GCNN and some of my novel ideas on this domain. I am evaluating my methods on public benchmarks i.e. Shanhai-Tech, UBNormal dataset etc. Hopefuly I will be able to publish it soon.
+
+I am conducting research on human activity anomaly detection from CCTV footage personally. Here it is a very minimal demonstration on what I wish to achieve through my research. A large part of this work is not public yet. I am experimenting with VAE, VQVAE, Transformer, GCNN and some of my novel ideas on this domain. I am evaluating my methods on public benchmarks i.e. Shanhai-Tech, UBNormal dataset etc. Hopefuly I will be able to publish it soon.
   - Code : [motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
   - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
   - src/feat_tracker.py : Detects key feature points and tracks them.
@@ -21,7 +22,7 @@ I am researching on human activity anomaly detection from CCTV footage personall
   - src/gui.py : Visualize audio intensity and feature point velocity.
 
 ### Results
-- Feature keypoints are being tracked in real time. The keypoints could be human body keypoints or tracked keypoints from vision algorithms like - [Good Feture To Track](http://www.ai.mit.edu/courses/6.891/handouts/shi94good.pdf) , [SIFT,SURF,ORB etc.](https://docs.opencv.org/3.4/db/d27/tutorial_py_table_of_contents_feature2d.html)
+- Feature keypoints are being tracked in real time. The keypoints could be human body pose keypoints [see the next section for pose tracking](#pose_track) or tracked keypoints from classic computer vision algorithms like - [Good Feture To Track](http://www.ai.mit.edu/courses/6.891/handouts/shi94good.pdf) , [SIFT,SURF,ORB etc.](https://docs.opencv.org/3.4/db/d27/tutorial_py_table_of_contents_feature2d.html)
 - The change in feature point trajectory is plotted (bottom left plot) and analysed for anomaly.
 - Sound intensity (bottom right plot) is added as an additional modality for reinforcing the initial hypothesis for anomaly.
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif align='left' width='100%'>
@@ -56,7 +57,7 @@ I am researching on human activity anomaly detection from CCTV footage personall
 ```
 ```
 
-<a id='#yolov8'></a>
+<a id='yolov8'></a>
 ## YOLO-V8 (Working on top of public source code)
 <a href='#table_of_content'> back </a>
   - yolo-v8 is a modified version of publicly available source code of [Ultralytics](https://github.com/ultralytics/ultralytics)
