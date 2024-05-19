@@ -1,6 +1,6 @@
 <a id=table_of_content></a>
 # Deep-Learning-For-Computer-Vision
-Most of my [works](https://irfanhasib0.github.io) before 2022 were implementation from scratch. Now a days every day new papers are being publishesd. It's impossible to implement each them from scratch. For catching up with SOTA algorithms sometimes I work on top of the publicly available source code of respective researches.
+Most of my [works](https://irfanhasib0.github.io) before 2022 were implementation from scratch. Now a days every day new algorithms are beating the existing ones. It's impossible to implement each them from scratch. For catching up with state of the earth technologies sometimes I work on top of the publicly available source code.
 
 - <a href='#abn_motion'> Abnormal  Motion Detection (From Scratch)</a>
 - <a href='#pose_track'> Pose Detection and Tracking</a>
@@ -12,7 +12,7 @@ Most of my [works](https://irfanhasib0.github.io) before 2022 were implementatio
 <a id='abn_motion'></a>
 ## Abnormal Motion Detection (Implementation From scratch)
 <a href='#table_of_content'> back </a>
-
+I am researching on human activity anomaly detection from CCTV footage personally. Here it is a very minimal demonstration on what I wish to achieve through my research. A large part of this work is not public yet. I am trying out VAE, VQVAE, Transformer, GCNN and some of my novel ideas on this domain. I am evaluating my methods on public benchmarks i.e. Shanhai-Tech, UBNormal dataset etc. Hopefuly I will be able to publish it soon.
   - Code : [motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
   - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
   - src/feat_tracker.py : Detects key feature points and tracks them.
@@ -21,6 +21,9 @@ Most of my [works](https://irfanhasib0.github.io) before 2022 were implementatio
   - src/gui.py : Visualize audio intensity and feature point velocity.
 
 ### Results
+- Feature keypoints are being tracked in real time. The keypoints could be human body keypoints or tracked keypoints from vision algorithms like - [Good Feture To Track](http://www.ai.mit.edu/courses/6.891/handouts/shi94good.pdf) , [SIFT,SURF,ORB etc.](https://docs.opencv.org/3.4/db/d27/tutorial_py_table_of_contents_feature2d.html)
+- The change in feature point trajectory is plotted (bottom left plot) and analysed for anomaly.
+- Sound intensity (bottom right plot) is added as an additional modality for reinforcing the initial hypothesis for anomaly.
 <img src=https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/results/lock_1.gif align='left' width='100%'>
 ```
 ```
