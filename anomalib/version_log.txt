@@ -1,0 +1,65 @@
+commit 1473a679af4fff15384494d731bce583cce0ab37
+Author: Samet Akcay <samet.akcay@intel.com>
+Date:   Mon Aug 12 13:55:28 2024 +0100
+
+    Update __init__.py
+
+commit 32fd3a8de7074e0ca4af796f3573bc0a84defa25
+Author: Samet Akcay <samet.akcay@intel.com>
+Date:   Mon Aug 12 13:54:34 2024 +0100
+
+    Bump Anomalib version to 1.2.0dev
+
+commit 904d2110074c81f2aebd491e9cdb3eedf1458887
+Author: Samet Akcay <samet.akcay@intel.com>
+Date:   Mon Aug 12 13:53:48 2024 +0100
+
+    Release v1.1.1 (#2237)
+    
+    Update `CHANGELOG.md` (#2236)
+    
+    Update changelog
+
+commit 1a041d137d4d58cc9cdce563519c3f376357beee
+Author: Ashwin Vaidya <ashwin.vaidya@intel.com>
+Date:   Mon Aug 5 18:24:52 2024 +0200
+
+    🔨Remove device postfix (#2233)
+    
+    * remove device postfix
+    
+    Signed-off-by: Ashwin Vaidya <ashwinnitinvaidya@gmail.com>
+    
+    * delete test
+    
+    Signed-off-by: Ashwin Vaidya <ashwinnitinvaidya@gmail.com>
+    
+    * update tests
+    
+    Signed-off-by: Ashwin Vaidya <ashwinnitinvaidya@gmail.com>
+    
+    ---------
+    
+    Signed-off-by: Ashwin Vaidya <ashwinnitinvaidya@gmail.com>
+
+commit d1f824a5798262891dbbe583fb291e1cf9aa7d2a
+Author: Alexander Riedel <54716527+alexriedel1@users.noreply.github.com>
+Date:   Tue Jul 16 13:26:03 2024 +0200
+
+    Fix normalization (#2130)
+    
+    * fix normalization
+    
+    * precommit config...
+    
+    * reset normalization metrics on validation start
+    
+    * fix model loading and saving normalitzation metrics
+    
+    * Update src/anomalib/callbacks/normalization/min_max_normalization.py
+    
+    * Update src/anomalib/callbacks/normalization/min_max_normalization.py
+    
+    ---------
+    
+    Co-authored-by: Samet Akcay <samet.akcay@intel.com>
