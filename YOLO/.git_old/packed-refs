@@ -1,0 +1,14 @@
+# pack-refs with: peeled fully-peeled sorted 
+8fc6449434c67f7bb2a32ae62b9a6a75b0bd7630 refs/remotes/origin/DATASET
+b9867bbae1837ee816e93a026d708f6e01907370 refs/remotes/origin/DDP_BUGS
+b69cc03133b281daebbbf930bb9ed367fa7c2ca9 refs/remotes/origin/DEPLOY
+a984cc69de9383d092539bad667b5c5255f43e7b refs/remotes/origin/DOCKER
+ba6baa6c81bf198847d53a95d0fa9902fec69cb2 refs/remotes/origin/INFERENCE
+d44dbc0e5c68a82665c529a52de7c2f5e3853e37 refs/remotes/origin/MODEL
+0a661ecddd9111615544853d640ab067c69a3e31 refs/remotes/origin/MODELv2
+0d4917715c6ef9b961b27c027cb96587ea47ccbf refs/remotes/origin/MODELv7
+8228669808a626fc5f9c233fdb35550b5e041fae refs/remotes/origin/SETUP
+dc88787a7f6fff89d6e60fb63ee20a4be1721b34 refs/remotes/origin/TEST
+a44a5c1966356cc2c0256851bc22c80f1c158e0b refs/remotes/origin/TRAIN
+8228669808a626fc5f9c233fdb35550b5e041fae refs/remotes/origin/main
+24b85bd7d5eef1c4b2fff1138b5fb1d33620de5a refs/tags/v1.0-alpha

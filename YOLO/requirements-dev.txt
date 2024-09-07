@@ -1,0 +1,7 @@
+-r requirements.txt
+gradio
+pytest
+pytest-cov
+pre-commit
+pycocotools
+tensorboard

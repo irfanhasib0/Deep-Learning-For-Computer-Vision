@@ -1,0 +1,30 @@
+commit 8228669808a626fc5f9c233fdb35550b5e041fae
+Author: henrytsui000 <henrytsui000@gmail.com>
+Date:   Thu Aug 15 00:20:07 2024 +0800
+
+    ✏️ [Fix] typo in README doc
+
+commit 86cd350f2b85fa154291fa41f4340a8f9ae0dae9
+Merge: 699f2d2 a7ca20f
+Author: henrytsui000 <henrytsui000@gmail.com>
+Date:   Thu Aug 15 00:19:27 2024 +0800
+
+    🔀 [Merge] branch 'main' into SETUP
+
+commit 699f2d28ee0ea3c24cb77aa0633d70a5e2944056
+Author: henrytsui000 <henrytsui000@gmail.com>
+Date:   Thu Aug 15 00:12:12 2024 +0800
+
+    ⬆️ [Update] dependency and the load cache function
+
+commit 0efc848311c6d7e6f36d398f3b2674cbe9052068
+Author: henrytsui000 <henrytsui000@gmail.com>
+Date:   Thu Aug 15 00:10:03 2024 +0800
+
+    ⬆️ [Update] mAP from 0~1 to percentage
+
+commit a7ca20f5da6500ab22f2989670bf29ac1f259fd6
+Author: HenryTsui <54672031+henrytsui000@users.noreply.github.com>
+Date:   Thu Aug 15 00:01:12 2024 +0800
+
+    ✍️ [Update] README.md

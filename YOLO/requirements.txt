@@ -1,0 +1,13 @@
+einops
+graphviz
+hydra-core
+loguru
+numpy
+opencv-python
+Pillow
+pycocotools
+requests
+rich
+torch
+torchvision
+wandb
