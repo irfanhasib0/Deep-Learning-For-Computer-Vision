@@ -1,0 +1,47 @@
+commit e79491ec8f0b8c86fda947fbaaa824c66ab2a991
+Author: luomaoling <50576385+luomaoling@users.noreply.github.com>
+Date:   Tue Apr 25 21:25:18 2023 +0800
+
+    Support mmtrack with NPU backend. (#876)
+
+commit 5b47f18054d9b9aae3cb5eb24618f8a3ac20c79e
+Author: Tao Gong <gt950513@mail.ustc.edu.cn>
+Date:   Tue Feb 7 14:31:01 2023 +0800
+
+    Fix lint (#833)
+
+commit cb9d8da55603cabc7cf06636a206bbe0e8243f9f
+Author: Cheng-Yen Yang <yangchris11@gmail.com>
+Date:   Mon Feb 6 22:16:40 2023 -0800
+
+    [Docs] Fix the DanceTrack dataset annotation converting script (#827)
+    
+    * Update dataset.md
+    
+    * Update dataset.md
+
+commit b1679f990bce7abc18e852004d2f70b09904e238
+Author: songtianhui <77977134+songtianhui@users.noreply.github.com>
+Date:   Fri Nov 25 15:08:13 2022 +0800
+
+    Provide checkpoints for MixFormer. (#778)
+    
+    * add MixFormer in README
+    
+    * add checkpoints
+    
+    * add mixformer in docs
+    
+    * fix metafile
+    
+    * update test results
+    
+    * fix mixformer test pipeline
+    
+    * update model-index.yml
+
+commit 87d55eccf41e6a38c6d28c64bc094430764bea82
+Author: dyhBUPT <99722489+dyhBUPT@users.noreply.github.com>
+Date:   Fri Nov 4 09:58:21 2022 +0800
+
+    fix mini version of mmcv (#759)
