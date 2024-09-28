@@ -1,0 +1,13 @@
+commit 2a76b1ea18de4fb78c8b2b019204687cbae3ff88
+Author: Rawal Khirodkar <rawalkhirodkar@gmail.com>
+Date:   Wed Sep 25 15:21:29 2024 -0400
+
+    Update extract_feature.py
+
+commit 617f834f85493de5a434c205abfa27ca36bf6a10
+Author: Rawal Khirodkar <rawalk@fb.com>
+Date:   Thu Aug 22 08:31:27 2024 -0700
+
+    Add initial commit
+    
+    Update vis_normal.py
