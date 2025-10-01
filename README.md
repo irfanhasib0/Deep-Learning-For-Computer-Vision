@@ -1,7 +1,6 @@
 <a id=table_of_content></a>
 # Deep-Learning-For-Computer-Vision
-Most of my [works](https://irfanhasib0.github.io) before 2022 were implementation from scratch. Now a days every day new algorithms are beating the existing ones. It's impossible to implement each them from scratch. For catching up with state of the earth technologies sometimes I work on top of the publicly available source code.
-
+Most of my [works](https://irfanhasib0.github.io) prior to 2022 involved implementing algorithms from scratch. However, with the rapid pace of progress in the field, where new methods frequently surpass existing ones, it is no longer practical to reimplement every approach. To keep up with state-of-the-art techniques, I now often build on publicly available source code when appropriate.
 - <a href='#abn_motion'> Abnormal  Motion Detection (From Scratch)</a>
 - <a href='#pose_track'> Pose Detection and Tracking</a>
 - <a href='#sem_seg'>Semantic segmentation with DeepLabV3</a>
