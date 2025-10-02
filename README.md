@@ -12,7 +12,7 @@ Most of my [works](https://irfanhasib0.github.io) prior to 2022 involved impleme
 ## Abnormal Motion Detection (Implementation From scratch)
 <a href='#table_of_content'> back </a>
 
-I am conducting research on human activity anomaly detection from CCTV footage personally. Here it is a very minimal demonstration on what I wish to achieve through my research. A large part of this work is not public yet. I am experimenting with VAE, VQVAE, Transformer, GCNN and some of my novel ideas on this domain. I am evaluating my methods on public benchmarks i.e. Shanhai-Tech, UBNormal dataset etc. Hopefuly I will be able to publish it soon.
+I am currently conducting independent research on human activity anomaly detection from CCTV footage. The demonstration I share here represents only a minimal preview of my intended research outcomes, as much of the work is not yet public. My experiments explore VAE, VQ-VAE, Transformer architectures, GCNs, as well as several novel approaches I am developing in this domain. I am evaluating these methods on established public benchmarks such as ShanghaiTech and UBnormal, and I am hopeful to publish the results in the near future.
   - Code : [motion-anomaly](https://github.com/irfanhasib0/Deep-Learning-For-Computer-Vision/blob/main/motion-anomaly/)
   - src/stream_io.py : Takes care of simultanous videoo and audio capture from webcam / ipcam / video file using ffmpeg.
   - src/feat_tracker.py : Detects key feature points and tracks them.
