@@ -9,7 +9,7 @@ Most of my [works](https://irfanhasib0.github.io) prior to 2022 involved impleme
 - <a href='#diffusion'> Diffusion model for car image generation.</a>
 
 <a id='abn_motion'></a>
-## Abnormal Motion Detection (Implementation From scratch)
+## Abnormal Motion Detection
 <a href='#table_of_content'> back </a>
 
 I am currently conducting independent research on human activity anomaly detection from CCTV footage. The demonstration I share here represents only a minimal preview of my intended research outcomes, as much of the work is not yet public. My experiments explore VAE, VQ-VAE, Transformer architectures, GCNs, as well as several novel approaches I am developing in this domain. I am evaluating these methods on established public benchmarks such as ShanghaiTech and UBnormal, and I am hopeful to publish the results in the near future.
